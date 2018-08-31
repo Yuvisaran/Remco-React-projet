@@ -1,0 +1,64 @@
+/* Reset CSS */
+html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, abbr, address, cite, code, del, dfn, em, img, ins, kbd, q, samp,small, strong, sub, sup, var,
+b, i,dl, dt, dd, ol, ul, li,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td,article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary, time, mark, audio, video { margin:0;  padding:0; border:0; outline:0; font-size:100%; vertical-align:baseline; background:transparent;}
+body { line-height:1; background: #f7f9fb; font-family: 'Roboto';}
+article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section {display:block;}
+ul, ol{ list-style:none;}
+a, a:focus, a:hover {text-decoration: none; outline: none; vertical-align:baseline; background:transparent;}
+table { border-collapse:collapse; border-spacing:0;}
+input, input:focus, input:hover, select { vertical-align:middle; outline: none;}
+.pos-relative{position: relative;}
+.flex{display: flex; align-items: center;}
+button, button:focus, button:hover{border:none; outline: none !important;}
+select {-webkit-appearance: none;  -moz-appearance: none; cursor: pointer;}
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0;}
+input[type="number"] {-moz-appearance: textfield;}
+/*  Margin */
+.mtop0{margin-top: 0;}
+.mtop10{margin-top: 10px;}
+.mtop15{margin-top: 15px;}
+.mtop20{margin-top: 20px;}
+.mtop25{margin-top: 25px;}
+.mtop30{margin-top: 30px;}
+.mtop35{margin-top: 35px;}
+.mtop40{margin-top: 40px;}
+.mtop45{margin-top: 45px;}
+.mtop50{margin-top: 50px;}
+.mright0{margin-right: 0;}
+/* Padding */
+.ptop10{padding-top: 10px;}
+.ptop15{padding-top: 15px;}
+.ptop20{padding-top: 20px;}
+.ptop25{padding-top: 25px;}
+.ptop30{padding-top: 30px;}
+.ptop35{padding-top: 35px;}
+.ptop40{padding-top: 40px;}
+.ptop45{padding-top: 45px;}
+.ptop50{padding-top: 50px;}
+
+/* Colors */
+.green-text{color:#00a651 !important;}
+.red-text{color:#cc5d28 !important;}
+
+.green{background: #00a651 !important; color:#ffffff !important;}
+.orange{background: #f7941d !important;}
+.lightblue{background: #00adef !important; color:#ffffff !important;}
+.darkblue{background: #2e75b9 !important; color:#ffffff !important;}
+.darkb{background: #323a45 !important; color:#ffffff !important;}
+.darkorange{background: #cc5d28 !important; color:#ffffff !important;}
+.darkred{background: #e05b48 !important; color:#ffffff !important;}
+/* User Dashboard */
+.bg2f3e9e{background: #2f3e9e !important; color:#ffffff !important;}
+.bgd22e2e{background: #d22e2e !important; color:#ffffff !important;}
+.bg00a651{background: #00a651 !important; color:#ffffff !important;}
+.bg00aeef{background: #00aeef !important; color:#ffffff !important;}
+.bg6d6e71{background: #6d6e71 !important; color:#ffffff !important;}
+.bgf7941e{background: #f7941e !important; color:#ffffff !important;}
+
+.form-control{height: auto; }
+
+#wrapper { width: 100%;}
+#page-wrapper { padding:7em 2em 2.5em;}
+
+

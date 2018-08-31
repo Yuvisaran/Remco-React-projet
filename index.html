@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang = "en">
+
+   <head>
+      <title>Remco</title>
+      <meta charset="UTF-8">
+      <meta name="description" content="Remco">
+      <meta name="keywords" content="Remco">
+      <meta name="author" content="Remco">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="./src/public/image/title-icon.png" rel="icon">
+      <link href="./src/public/css/bootstrap.css" rel="stylesheet" type="text/css">
+      <link href="./src/public/css/style.css" rel="stylesheet" type="text/css">
+      <link href="/src/public/css/responsive.css" rel="stylesheet" type="text/css">
+      <link href="./src/public/css/font-awesome.css" rel="stylesheet" type="text/css">
+      <link href="/src/public/css/reset.css" rel="stylesheet" type="text/css">
+      <link href="/src/public/css/font.css" rel="stylesheet" type="text/css">   </head>
+      <link href="/src/public/css/animate.css" rel="stylesheet" type="text/css">
+      <link href="/src/public/css/jquery-ui.css" rel="stylesheet" />
+      <script>addEventListener("load", function () { setTimeout(hideURLbar, 0); }, false); function hideURLbar() { window.scrollTo(0, 1); } </script>
+      <script src="/src/public/js/jquery.js"></script>
+      <script src="/src/public/js/jquery-ui.js"></script>
+      <script src="/src/public/js/bootstrap-select.js"></script>
+
+      <script src="/src/public/js/bootstrap.js"></script>
+      <script src="/src/public/js/classie.js"></script>
+      <script src="/src/public/js/custom.js"></script>
+      <script src="/src/public/js/multiselectdropdown.js"></script>
+      <script src="/src/public/js/popper.js"></script>
+
+      <script>
+          var menuLeft = document.getElementById('cbp-spmenu-s1'),
+              showLeftPush = document.getElementById('showLeftPush'),
+              body = document.body;
+  
+        //   showLeftPush.onclick = function () {
+        //       classie.toggle(this, 'active');
+        //       classie.toggle(body, 'cbp-spmenu-push-toright');
+        //       classie.toggle(menuLeft, 'cbp-spmenu-open');
+        //       disableOther('showLeftPush');
+        //   };
+  
+  
+          function disableOther(button) {
+              if (button !== 'showLeftPush') {
+                  classie.toggle(showLeftPush, 'disabled');
+              }
+          }
+      </script>
+
+   <body>
+      <div id = "app"></div>
+      <script src = "index.js"></script>
+   </body>
+
+</html>
