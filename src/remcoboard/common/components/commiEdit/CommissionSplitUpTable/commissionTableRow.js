@@ -3,32 +3,32 @@ import CommissionTableCell from './commissionTableColumn';
 
 export default class CommissionTableRow extends React.Component {
   render() {
-    console.log('table row', this.props.perOfInvestorError)
     return (
       <Fragment>
         <tr>
-          <CommissionTableCell onProductTableUpdate={this.props.onProductTableUpdate} cellData={{
-            type: 'checkbox',
-            name: 'checkValue',
-            value: this.props.commissionDetail.checkValue,
-            id: this.props.commissionDetail.id,
-          }} />
-          <td>Affiliate </td>
-          <CommissionTableCell perOfInvestorError={this.props.perOfInvestorError} onProductTableUpdate={this.props.onProductTableUpdate} cellData={{
-            type: 'text',
-            name: 'percentageOfInvestor',
-            value: this.props.commissionDetail.percentageOfInvestor,
-            id: this.props.commissionDetail.id,
-            placeHolder: '100',
-            max: 100
-          }} />
-          <CommissionTableCell commissionEmailIdError={this.props.commissionEmailIdError} onProductTableUpdate={this.props.onProductTableUpdate}
+          <CommissionTableCell onProductTableUpdate={this.props.onProductTableUpdate} id={this.props.commissionDetail.investorPercentageId}
+            cellData={{
+              type: 'checkbox',
+              name: 'checkValue',
+              value: this.props.commissionDetail.checkValue,
+              id: this.props.commissionDetail.investorPercentageId,
+            }} />
+          <td>Investor </td>
+          <CommissionTableCell perOfInvestorError={this.props.perOfInvestorError} id={this.props.commissionDetail.investorPercentageId}
+            onProductTableUpdate={this.props.onProductTableUpdate} cellData={{
+              type: 'text',
+              name: 'percentageOfInvestor',
+              value: this.props.commissionDetail.percentageOfInvestor,
+              id: this.props.commissionDetail.investorPercentageId,
+              max: 100
+            }} />
+          <CommissionTableCell commissionEmailIdError={this.props.commissionEmailIdError} id={this.props.commissionDetail.investorPercentageId}
+            onProductTableUpdate={this.props.onProductTableUpdate}
             cellData={{
               type: 'email',
               name: 'emailId',
               value: this.props.commissionDetail.emailId,
-              id: this.props.commissionDetail.id,
-              placeHolder: 'settlement1@vtnglobal.com',
+              id: this.props.commissionDetail.investorPercentageId,
               list: 'investors'
             }} />
         </tr>

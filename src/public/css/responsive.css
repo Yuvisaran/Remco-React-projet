@@ -1,37 +1,49 @@
 @media only screen and (min-width: 960px) and (max-width: 1199px) {
 }
 @media only screen and (min-width: 960px) and (max-width: 1199px) {
-    button#showLeftPush { display: block; width: 51px;}
-    .dashboardlogo{background-position: 50px 3px; height:64px;}
+    /* button#showLeftPush { display: block; width: 51px;} */
+    /* .dashboardlogo{background-position: 50px 3px; height:64px;} */
     .fees-verfytable{margin-top: 0;}
     .commission-body h1{margin-bottom: 0; font-size: 17px;}
-    .mobilepadd{padding: 0;}
     .admin-lg-3{width: 50%;}
 
 }
  @media only screen and (min-width: 768px) and (max-width: 959px) {
-    button#showLeftPush { display: block; width: 51px; padding: 20px 0;}
-    .dashboardlogo{background-position: 50px 0px; height:64px;}
-    .commission-body h1{margin-bottom: 0; font-size: 17px;}
-    .mobilepadd{padding: 0;}
+    button#showLeftPush { display: none; width: 51px; padding: 20px 0;}
+    /* .dashboardlogo{background-position: 50px 0px; height:64px;} */
+    .commission-body h1{ font-size: 17px;}
     .admin-lg-3{width: 50%;}
 }
  @media only screen and (min-width: 480px) and (max-width: 767px) {
-    .dashboardlogo{background-position: 50px 0px; height:64px;}
+    .header-left { width: 60%;} 
+    /* .dashboardlogo{background-position: 50px 0px; height:64px;} */
+    .dashboardlogo{background-position: 50px 4px;}
+    .profile_details ul li ul.dropdown-menu.drp-mnu{min-width: auto !important; right: 0; left: auto; margin-right: 6px;}
+    .fee-tabls table{min-height: .01%; overflow-x: auto;}
+    .commission-form{margin: 10px 0;}
+    .mobilepadd{padding: 0;}
     .searchbox{margin-top: 20px;}
     .table-details table thead tr th{white-space: nowrap;}
     .datatable-pagination{text-align: right;}
-    .datatable-pagination ul.pagination li a{padding: 6px 12px; font-size: 14px; margin: 0 0px;}
+    .datatable-pagination ul.pagination li a{padding: 6px 12px; font-size: 14px; }
     button#showLeftPush { display: block; width: 51px; padding: 20px 0;}
-    .commission-body h1{margin-bottom: 0; font-size: 17px;}
-    .mobilepadd{padding: 0;}
+    .commission-body h1{font-size: 17px;}
     .remco-lg-3{width: 100%;}
     .export-button .excel-btn{margin-top: 12px;}
     .export-table-view table thead tr th{white-space: nowrap;}
     .admin-lg-3{width: 50%;}
 }
  @media only screen and (max-width: 479px) {
+    .cbp-spmenu-vertical {top: 108px;}
+    .header-left { width: 100%;} 
+    .sticky-header{padding: 0;}
+    .profile_details{float: right;}
+    .dashboardlogo{background-position: 47px 11px; height: 64px; background-size: 137px;}
     .login-wrapper{display: initial; margin-left: 15px; margin-right: 15px;}
+    .profile_details ul li ul.dropdown-menu.drp-mnu{min-width: auto !important; right: 0; left: auto; margin-right: 6px;}
+    .user-name{margin-left: 18px;}
+    .selectmonth select{height: auto; width: 100%; display: block; margin-bottom: 8px;}
+    .selectmonth{display: block;}
     .login-bg{width: 100%; padding: 12px;}
     .remittance-form{width: 100%;}
     .remittance-title h1{font-size: 12px;}
@@ -40,20 +52,19 @@
     .serverip-div a{right: inherit;}
     .uploadLicense{width: 100%; margin: 0;}
     .down-icon{padding: 6px 0;}
-    .dashboardlogo{background-position: 50px 0px; height:64px;}
     .dashboard-title h1{font-size: 16px;}
     .searchbox{margin-top: 20px;}
     .searchicon{width: 100%;}
     .table-details table thead tr th{white-space: nowrap;}
-    .datatable-pagination{text-align: center;}
-    .datatable-pagination ul.pagination li a{padding: 4px 9px; font-size: 14px; margin: 0 0px;}
+    /* .datatable-pagination{text-align: center;} */
+    .datatable-pagination ul.pagination li a{padding: 4px 9px; font-size: 14px; }
     button#showLeftPush { display: block; width: 51px; padding: 20px 0;}
     .createnew-admin{display: block; margin-top: 20px;}
     .commission-form{margin-top: 10px;}
     .mobilepadd{padding: 0;}
     .mobilepadd0{padding: 0;}
     .commission-body{padding: 12px;}
-    .commission-body h1{margin-bottom: 0; font-size: 17px;}
+    .commission-body h1{font-size: 17px;}
     .fees-adddelete{display: inherit; font: none; text-align: center;}
     .fees-adddelete button{margin-bottom: 10px;}
     .fees-verfytable{margin-top: 0;}
@@ -66,6 +77,7 @@
     .transactionhistory{margin-top: 10px;}
     .transactionhistory table thead tr th{white-space: nowrap;}
     .admin-lg-3{width: 100%;}
+    .btn-pend{margin-bottom:4px; }
 }
 /*---- responsive-design -----*/
 @media(max-width:1440px){
@@ -111,8 +123,6 @@
     .chrt-page-grids canvas#bar {height: 265px !important;}
     }
     @media(max-width:1080px){
-
-    .cbp-spmenu-vertical {  width: 240px;  top: 74px;}
     .cbp-spmenu-push div#page-wrapper { margin:0 0 0 15em;  padding: 6.5em 1.5em 2em;}
     /* .sidebar ul li {
         margin-bottom: 0.8em;
@@ -210,7 +220,7 @@
     .search-box { width: 39%;}
     li.dropdown.head-dpdn a.dropdown-toggle {  padding: 1.7em 1.5em;}
     .profile_details_drop a.dropdown-toggle { padding: 0.8em 2em 0 1em;}
-    .profile_details ul li ul.dropdown-menu.drp-mnu { min-width: 163px; top: 112%;}
+    /* .profile_details ul li ul.dropdown-menu.drp-mnu { min-width: 163px; top: 112%;} */
     /* button#showLeftPush {
         width: 65px;
     } */
@@ -276,8 +286,6 @@
     li.dropdown.head-dpdn { padding: 1.5em 0;}
     li.dropdown.head-dpdn a.dropdown-toggle {  padding: 1.5em 1.6em 1.5em 1.2em;}
     .profile_details_drop a.dropdown-toggle {  padding: 0.6em 2em 0 1em; }
-    .profile_details li a i.fa.lnr { top: 28%;}
-    .cbp-spmenu-vertical {  /* padding: 1em 0; */ width: 201px; top: 65px; }
     .cbp-spmenu-push div#page-wrapper { margin: 0; }
     .cbp-spmenu-left.cbp-spmenu-open { left:0;}
     .cbp-spmenu-vertical {  left: -309px;}
@@ -288,8 +296,8 @@
     .sidebar .navbar-collapse.collapse { display: block;}
     }
     @media(max-width:640px){
+        .creattoken{margin-top: 6px;}
     .sidebar .navbar-collapse.collapse { display: block;}
-    .header-left { width: 60%;} 
     .search-box { width: 40%; margin: 1em 0 0 8em;}
     .header-right { padding: 0; margin-top: 6px;}
     .profile_details_drop a.dropdown-toggle { padding: 0 3em 0 0;}
@@ -300,8 +308,6 @@
     li.dropdown.head-dpdn a.dropdown-toggle { padding: 1.2em 2em 1.2em 1.5em;}
     ul.dropdown-menu.drp-mnu li { padding: 6px 0;}
     .profile_details .dropdown-menu > li > a {font-size: 0.9em;}
-    .profile_details li a i.fa.lnr { top: 14%;}
-    .cbp-spmenu-push div#page-wrapper {  padding: 10.5em 1em 2em;}
     h4.title { font-size: 1em;}
     .stats-left h4 { font-size: 1.7em;}
     .stats-right { padding: 1.35em 0em;}
@@ -337,14 +343,16 @@
     .footer p { font-size: 0.9em; }
     }
     @media(max-width:600px){
-        .cbp-spmenu-push div#page-wrapper {  padding: 7em 1em 2em;}
+        .cbp-spmenu-push div#page-wrapper {  padding: 7.4em 1em 2em;}
+        .table-responsive1{min-height: .01%; overflow-x: auto;}
     }
     @media(max-width:480px){
-        .cbp-spmenu-push div#page-wrapper {  padding: 10.5em 1em 2em;}
-        .header-left{width: 100%;}
+    .datepicker-right{float: none; display: inherit;}
+    .investorSubmit{margin-top: 10px;}
+    .fa-code-div{width: 95%; padding: 12px;}
+    .fa-code-content input{width: 100%;}
     .search-box { margin: 1em 0 0 3em;}
     .logo a span {font-size: .55em; }
-    .cbp-spmenu-vertical {top: 67px;}
     .stats-left {width: 68%; padding: 1em .6em;}
     .stats-right { padding: 1.52em 0;  width: 32%;}
     .sidebar .nav-second-level li a { padding-left: 40px !important;}
@@ -424,8 +432,8 @@
     h3.title1 { font-size: 1.4em;}
     }
     @media(max-width:320px){
-    .datatable-pagination{text-align: center;}
-    .datatable-pagination ul.pagination li a{padding: 3px 6px; margin: 0; font-size: 13px;}
+    /* .datatable-pagination{text-align: center;} */
+    .datatable-pagination ul.pagination li a{padding: 3px 6px;font-size: 13px;}
     .logo a h1 { font-size: 1em; line-height: 0.7em;}
     .logo a span { letter-spacing: 4px; font-size: .5em;}
     i.fa.fa-bars { font-size: 0.8em;}
@@ -438,19 +446,15 @@
     li.dropdown.head-dpdn a.dropdown-toggle { padding: 0.8em 1.3em 0.8em 0.8em;}
     .header-right span.badge {font-size: 8px; line-height: 11px; width: 16px; height: 15px;}
     .header-right i.fa { margin-right: 0;}
-    .profile_details_drop a.dropdown-toggle { padding: 0 1.5em 0 0;}
+    .profile_details_drop a.dropdown-toggle { padding: 0 2.5em 0 0;}
     .user-name p { font-size: 0.9em;}
     .profile_img span.prfil-img { width: 32%;}
     .profile_img span.prfil-img img { width: 100%;}
-    .user-name { margin-top: 5px; margin-left: 8px;}
-    .profile_details li a i.fa.lnr { top: 8%;}
-    /* .cbp-spmenu-vertical { padding: 0.5em 0; width: 161px; top: 52px;} */
     i.nav_icon { margin-right: 0.7em;font-size: 1em;}
     .sidebar ul li a {font-size: 0.85em;}
     span.nav-badge { font-size: 8px; width: 21px; height: 20px; line-height: 21px;}
     span.nav-badge-btm { font-size: 9px; padding: 0 0.8em; line-height: 18px; top: 22%;}
     ul.nav.nav-second-level li a { padding: 5px 32px;}
-    .cbp-spmenu-push div#page-wrapper { padding: 8.2em 1em 1.5em;}
     .bs-example5 { padding: 1em;}
     .panel-info.widget-shadow { padding: 1.5em 0em 0.5em;}
     .panel-body { padding: 10px;}
@@ -494,7 +498,7 @@
     .notification_header {margin-bottom: 4px;}
     .notification_bottom a { font-size: 0.9em;}
     .progress { height: 6px; margin: 4px 0;}
-    .profile_details ul li ul.dropdown-menu.drp-mnu { min-width: 130px;}
+    /* .profile_details ul li ul.dropdown-menu.drp-mnu { min-width: auto; left: -31px;} */
     ul.dropdown-menu.drp-mnu li {  padding: 4px 0;}
     .modal-grids { float: none;}
     .modal-grids:nth-child(3) { margin: 1em 0;}
@@ -560,5 +564,20 @@
     .sub_home input[type="submit"] {  margin: 0.5em 0 0 0; width: 34%;  font-size: 0.8em;}
     .chrt-page-grids { padding: 0.5em 1em;}
     .polar-area, .pie-grid { width: 80%; margin: 1em auto 0;}
+    }
+    /* landing page */
+    @media (min-width:480px) and (max-width:767px){
+        .landingContent{width:80%;margin: auto;}
+        .landingContent h2{font-size: 24px;}
+    }
+    @media (min-width:320px) and (max-width:479px){
+        .landingContent{width: 90%;
+            margin: auto;
+            margin-top: 55px;}
+        .landingContent h2{font-size: 22px;}
+        .landingButton{margin-bottom:10px;}
+
+        .landingLogo img {
+            width: 50%;}
     }
     /*--//responsive-design---*/

@@ -1,56 +1,75 @@
 <!DOCTYPE html>
-<html lang = "en">
+<html lang="en">
 
-   <head>
-      <title>Remco</title>
-      <meta charset="UTF-8">
-      <meta name="description" content="Remco">
-      <meta name="keywords" content="Remco">
-      <meta name="author" content="Remco">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link href="./src/public/image/title-icon.png" rel="icon">
-      <link href="./src/public/css/bootstrap.css" rel="stylesheet" type="text/css">
-      <link href="./src/public/css/style.css" rel="stylesheet" type="text/css">
-      <link href="/src/public/css/responsive.css" rel="stylesheet" type="text/css">
-      <link href="./src/public/css/font-awesome.css" rel="stylesheet" type="text/css">
-      <link href="/src/public/css/reset.css" rel="stylesheet" type="text/css">
-      <link href="/src/public/css/font.css" rel="stylesheet" type="text/css">   </head>
-      <link href="/src/public/css/animate.css" rel="stylesheet" type="text/css">
-      <link href="/src/public/css/jquery-ui.css" rel="stylesheet" />
-      <script>addEventListener("load", function () { setTimeout(hideURLbar, 0); }, false); function hideURLbar() { window.scrollTo(0, 1); } </script>
-      <script src="/src/public/js/jquery.js"></script>
-      <script src="/src/public/js/jquery-ui.js"></script>
-      <script src="/src/public/js/bootstrap-select.js"></script>
+<head>
+    <title>Remco</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="Remco">
+    <meta name="keywords" content="Remco">
+    <meta name="author" content="Remco">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="./src/public/image/title-icon.png" rel="icon">
+    <link href="./src/public/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="./src/public/css/style.css" rel="stylesheet" type="text/css">
+    <link href="/src/public/css/responsive.css" rel="stylesheet" type="text/css">
+    <link href="./src/public/css/font-awesome.css" rel="stylesheet" type="text/css">
+    <link href="/src/public/css/reset.css" rel="stylesheet" type="text/css">
+    <link href="/src/public/css/font.css" rel="stylesheet" type="text/css">
+    <link href="/src/public/css/animate.css" rel="stylesheet" type="text/css">
+    <link href="/src/public/css/jquery-ui.css" rel="stylesheet" />
+    <script>addEventListener("load", function () { setTimeout(hideURLbar, 0); }, false); function hideURLbar() { window.scrollTo(0, 1); } </script>
+    <script src="/src/public/js/jquery.js"></script>
+    <script src="/src/public/js/jquery-ui.js"></script>
+    <script src="/src/public/js/bootstrap-select.js"></script>
 
-      <script src="/src/public/js/bootstrap.js"></script>
-      <script src="/src/public/js/classie.js"></script>
-      <script src="/src/public/js/custom.js"></script>
-      <script src="/src/public/js/multiselectdropdown.js"></script>
-      <script src="/src/public/js/popper.js"></script>
+    <script src="/src/public/js/bootstrap.js"></script>
+    <script src="/src/public/js/classie.js"></script>
+    <script src="/src/public/js/custom.js"></script>
+    <script src="/src/public/js/multiselectdropdown.js"></script>
+    <script src="/src/public/js/popper.js"></script>
+</head>
+<script>
+    $(document).ready(function () {
+        $(this).on("click", "#showLeftPush", function () {
+            // alert();
+            var element = document.getElementById("leftSideMenu");
+            var element1 = document.getElementById("cbp-spmenu-s1");
+            element.classList.toggle("cbp-spmenu-push-toright");
+            element1.classList.toggle("cbp-spmenu-open");
+        });
+    });
+</script>
 
-      <script>
-          var menuLeft = document.getElementById('cbp-spmenu-s1'),
-              showLeftPush = document.getElementById('showLeftPush'),
-              body = document.body;
-  
-        //   showLeftPush.onclick = function () {
-        //       classie.toggle(this, 'active');
-        //       classie.toggle(body, 'cbp-spmenu-push-toright');
-        //       classie.toggle(menuLeft, 'cbp-spmenu-open');
-        //       disableOther('showLeftPush');
-        //   };
-  
-  
-          function disableOther(button) {
-              if (button !== 'showLeftPush') {
-                  classie.toggle(showLeftPush, 'disabled');
-              }
-          }
-      </script>
+<body oncontextmenu="return false;" id="leftSideMenu">
+    <div id="app"></div>
+    <script src="index.js"></script>
+    <script>
+        // Opera 8.0+
+        var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
 
-   <body>
-      <div id = "app"></div>
-      <script src = "index.js"></script>
-   </body>
+        // Firefox 1.0+
+        // var isFirefox = typeof InstallTrigger !== 'undefined';
+
+        // Safari 3.0+ "[object HTMLElementConstructor]" 
+        // var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || safari.pushNotification);
+
+        // Internet Explorer 6-11
+        var isIE = /*@cc_on!@*/false || !!document.documentMode;
+
+        // Edge 20+
+        // var isEdge = !isIE && !!window.StyleMedia;
+
+        // Chrome 1+
+        // var isChrome = !!window.chrome && !!window.chrome.webstore;
+
+        // Blink engine detection
+        // var isBlink = (isChrome || isOpera) && !!window.CSS;
+
+        if (isOpera || isIE) {
+            var output = "<img src='../src/public/image/bb.jpg' width='100%'/>"
+            document.body.innerHTML = output;
+        }      
+    </script>
+</body>
 
 </html>

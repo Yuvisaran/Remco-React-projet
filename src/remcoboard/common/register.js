@@ -45,19 +45,18 @@ class Register extends React.Component {
     this.setState({ [name]: value },
       () => { this.validateField(name, value) });
   }
+
   validateField(fieldName, value) {
     let fieldValidationErrors = this.state.errors;
 
     switch (fieldName) {
       case 'companyName':
         this.state.companyNamevalid = !validator.isEmpty(value);
-        // this.state.companyNamevalid = validator.isAlpha(value, ['en-US']);
         fieldValidationErrors.companyName = this.state.companyNamevalid ? '' : 'Please enter company name.';
         break;
       case 'ownerName':
         this.state.ownerNamevalid = !validator.isEmpty(value);
-        // this.state.ownerNamevalid = validator.isAlpha(value, ['en-US']);
-        fieldValidationErrors.ownerName = this.state.ownerNamevalid ? '' : 'Please enter company name.';
+        fieldValidationErrors.ownerName = this.state.ownerNamevalid ? '' : 'Please enter valid user name.';
         break;
       case 'mobileNo':
         this.state.mobileNovalid = validator.isNumeric(value) && validator.isLength(value, 5, 20);
@@ -68,7 +67,7 @@ class Register extends React.Component {
         fieldValidationErrors.emailId = this.state.emailIdvalid ? '' : 'Please enter valid email.';
         break;
       case 'password':
-        this.state.passwordvalid = value.length >= 8 && value.match(/^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{8,}$/);
+        this.state.passwordvalid = value.length >= 8 && value.match(/(?=.*[_!@#$%^&*-])(?=.*\d)(?!.*[.\n])(?=.*[a-z])(?=.*[A-Z])^.{8,}$/);
         fieldValidationErrors.password = this.state.passwordvalid ? '' : 'Password must contain atleast one uppercase, one lowercase, one number, one special character and must contain minimum 8 character.';
         break;
       case 'confirmPassword':
@@ -96,13 +95,14 @@ class Register extends React.Component {
     }
     this.setState({ errors: fieldValidationErrors }, this.validateForm)
   }
+
   validateForm() {
     this.setState({
       formValid: this.state.companyNamevalid &&
-                this.state.mobileNovalid &&
-                this.state.emailIdvalid &&
-                this.state.passwordvalid &&
-                this.state.confirmPasswordvalid
+        this.state.mobileNovalid &&
+        this.state.emailIdvalid &&
+        this.state.passwordvalid &&
+        this.state.confirmPasswordvalid
     })
   }
 
@@ -120,7 +120,6 @@ class Register extends React.Component {
     const api_url = base_url + 'register';
     axios.post(api_url, payLoad).then(response => {
       this.setState({ loading: false })
-      console.log(response)
       if (response.status === 200) {
         this.setState({
           companyName: '',
@@ -136,11 +135,13 @@ class Register extends React.Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(function (error) {
-      console.log(error)
+      sessionStorage.removeItem('loginInfo');
+      this.props.history.push('/login');
+      notify.show(error.response.data.message, 'error')
     });
   }
+
   render() {
-    console.log(this.state.formValid)
     return (
       <div>
         <Notifications />
@@ -168,7 +169,7 @@ class Register extends React.Component {
                   <span className="error">{this.state.errors.companyName}</span>
                 </div>
                 <div className="form-group">
-                  <input type="text" name="ownerName" value={this.state.ownerName} onChange={this.handleChange} placeholder="Full Name" />
+                  <input type="text" name="ownerName" value={this.state.ownerName} onChange={this.handleChange} placeholder="User Name" />
                   <span className="error">{this.state.errors.ownerName}</span>
                 </div>
                 <div className="form-group">

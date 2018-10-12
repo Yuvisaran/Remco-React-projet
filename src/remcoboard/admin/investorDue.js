@@ -9,7 +9,6 @@ import moment from 'moment';
 import SideMenu from '../common/sideMenu';
 import HeaderCommon from '../common/header';
 import { base_url } from '../common/apiUrl';
-import CustSearch from '../common/custSearch';
 import CustTable from '../common/custTable';
 
 export default class InvestorsDue extends Component {
@@ -26,24 +25,35 @@ export default class InvestorsDue extends Component {
       isInvestorNameValid: false,
       isFromDateValid: false,
       isToDateValid: false,
-      isFormValid: false
+      isFormValid: false,
+      role: '',
+      token: ''
     };
+    // Check authorized or not
+    if (sessionStorage.getItem('loginInfo') == null) {
+      props.history.push('/login');
+    }
   }
-
+  UNSAFE_componentWillMount() {
+    if (sessionStorage.getItem('loginInfo') != null) {
+      const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+      this.setState({ role: sessionInfo.loginInfo.role, token: sessionInfo.loginInfo.token });
+    }
+  }
   componentDidMount() {
+    // API request for investor list
     const api_url = base_url + 'admin/list/investor';
     this.setState({ isLoading: true });
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
     axios.get(api_url, {
       'headers': {
-        'authToken': sessionInfo.loginInfo.token,
-        'ownerType': sessionInfo.loginInfo.role
+        'authToken': this.state.token,
+        'ownerType': this.state.role
       }
     }).then(response => {
       this.setState({ isLoading: false });
       if (response.status === 200) {
         this.setState({ investors: response.data.investorList });
-      } else if (response.status === 206 && response.data.message === 'Session expired') {
+      } else if (response.status === 206 && response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
@@ -51,34 +61,40 @@ export default class InvestorsDue extends Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
-      if (error.response.status == 401) {
+      if (error.response.status === 401 && error.response.data.message === 'Auth token wrong') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+      } else if (error.response.status === 401) {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
 
   getInvestorsDue = () => {
+    // API request for investorDue amount list between selected date
     const api_url = base_url + 'admin/investor/percentage/list';
     this.setState({ isLoading: true });
     const payLoad = {
-      "investorName": this.state.investorName,
-      "fromDate": moment(this.state.fromDate).format('L'),
-      "toDate": moment(this.state.toDate).format('L')
+      'investorName': this.state.investorName,
+      'fromDate': moment(this.state.fromDate).format('L'),
+      'toDate': moment(this.state.toDate).format('L')
     }
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
     axios.post(api_url, payLoad, {
       'headers': {
-        'authToken': sessionInfo.loginInfo.token,
-        'ownerType': sessionInfo.loginInfo.role
+        'authToken': this.state.token,
+        'ownerType': this.state.role
       }
     }).then(response => {
       this.setState({ isLoading: false });
       if (response.status === 200) {
         this.setState({ investorsList: response.data.investorDTO });
-      } else if (response.status === 206 && response.data.message === 'Session expired') {
+      } else if (response.status === 206 && response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
@@ -86,25 +102,27 @@ export default class InvestorsDue extends Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
 
   handleChange = (e) => {
-    // console.log('chenged)
     const name = e.target.name;
     const value = e.target.value;
     this.setState({ [name]: value },
       () => { this.validateField(name, value) });
   }
+
   validateField(fieldName, value) {
     let fieldValidationErrors = this.state.errors;
-
     switch (fieldName) {
       case 'investorName':
         this.state.isInvestorNameValid = !validator.isEmpty(value);
@@ -113,9 +131,10 @@ export default class InvestorsDue extends Component {
       case 'fromDate':
         this.state.isFromDateValid = !validator.isEmpty(value);
         fieldValidationErrors.fromDate = this.state.isFromDateValid ? '' : 'Please select valid from date.';
+        this.state.isToDateValid = !validator.isEmpty(this.state.toDate) && (new Date(value).getTime() < new Date(this.state.toDate).getTime());
+        fieldValidationErrors.toDate = this.state.isToDateValid ? '' : 'Please select valid to date.';
         break;
       case 'toDate':
-      console.log('valid', !validator.isEmpty(value), '..', (new Date(this.state.fromDate).getTime() < new Date(value).getTime()), '..', !validator.isEmpty(value) && (new Date(this.state.fromDate).getTime() < new Date(value).getTime()) )
         this.state.isToDateValid = !validator.isEmpty(value) && (new Date(this.state.fromDate).getTime() < new Date(value).getTime());
         fieldValidationErrors.toDate = this.state.isToDateValid ? '' : 'Please select valid to date.';
         break;
@@ -124,6 +143,7 @@ export default class InvestorsDue extends Component {
     }
     this.setState({ errors: fieldValidationErrors }, this.validateForm)
   }
+
   validateForm() {
     this.setState({
       isFormValid:
@@ -132,17 +152,16 @@ export default class InvestorsDue extends Component {
         this.state.isToDateValid
     })
   }
+
   handlePageChange = (page) => {
-    console.log('pageno', page)
     this.setState({ page })
   }
 
-  tableHead = ['S.No', 'Date', 'Token Number', 'Remittance Company', 'City', 'IP Address', 'Total Fees Amount', 'Commistion Percentage', 'Amount'];
+  tableHead = ['S.No', 'Date', 'Token Number', 'Remittance Company', 'City', 'IP Address', 'Total Fees Amount',
+    'Commistion Percentage', 'Amount'];
 
   render() {
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    const { isLoading, investorsList, investors, page, isFormValid, errors, toDate, fromDate } = this.state;
-    console.log('investdue state', this.state);
+    const { isLoading, investorsList, investors, page, isFormValid, errors, toDate, fromDate, role } = this.state;
     return (
       <div>
         {
@@ -156,55 +175,55 @@ export default class InvestorsDue extends Component {
         }
         <Notifications />
         <div className="cbp-spmenu-push">
-          <SideMenu propsRole={sessionInfo.loginInfo.role} />
+          <SideMenu propsRole={role} />
           <HeaderCommon propsPush={this.props} />
           <div id="page-wrapper">
             <div className="main-page">
               <div className="dashboard-title">
                 <h1>Investors Due Amount</h1>
               </div>
-              <div className="selectInvestor">
-                <div className="selecbox-due">
-                  <label>Select your Investor Type</label>
-                  <div className="slctbox">
-                    <select value={this.state.investorName} name='investorName' onChange={this.handleChange}>
-                      <option value="">--Select Investor--</option>
-                      {_map(investors,
-                        (items, i) => (
-                          <Fragment key={i}>
-                            <option value={items.emailId}>{items.emailId} </option>
-                          </Fragment>
-                        ))}
-                    </select>
-                    <span className="error">{errors.investorName}</span>
+              <div className="investorAmout">
+                <div className="selectInvestor">
+                  <div className="selecbox-due">
+                    <label>Select From Investor List</label>
+                    <div className="slctbox">
+                      <select value={this.state.investorName} name='investorName' onChange={this.handleChange}>
+                        <option value="">--Select Investor--</option>
+                        {_map(investors,
+                          (items, i) => (
+                            <Fragment key={i}>
+                              <option value={items.emailId}>{items.emailId} </option>
+                            </Fragment>
+                          ))}
+                      </select>
+                      <span className="error">{errors.investorName}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="investor-datepick">
-                <div className="datepicker-right">
-                  <div className="date-pick pos-relative">
-                    <div className="form-group">
-                      <label>From Date</label>
-                      <input type="date" name='fromDate' value={fromDate} placeholder="18-07-2018" onChange={this.handleChange} />
-                      {/* <i className="fa fa-calendar" aria-hidden="true"></i> */}
-                      <span className="error">{errors.fromDate}</span>
+                <div className="investor-datepick">
+                  <div className="datepicker-right">
+                    <div className="date-pick pos-relative">
+                      <div className="form-group">
+                        <label>From Date</label>
+                        <input type="date" name='fromDate' value={fromDate} max="9999-12-31" placeholder="18-07-2018" onChange={this.handleChange} />
+                        <span className="error">{errors.fromDate}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="date-pick pos-relative">
-                    <div className="form-group">
-                      <label>End Date</label>
-                      <input type="date" name='toDate' value={toDate} placeholder="18-07-2018" onChange={this.handleChange} />
-                      {/* <i className="fa fa-calendar" aria-hidden="true"></i> */}
-                      <span className="error">{errors.toDate}</span>
+                    <div className="date-pick pos-relative">
+                      <div className="form-group">
+                        <label>End Date</label>
+                        <input type="date" name='toDate' value={toDate} max="9999-12-31" placeholder="18-07-2018" onChange={this.handleChange} />
+                        <span className="error">{errors.toDate}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="date-pick1 pos-relative mright0">
-                    <button type="button" className="investorSubmit" disabled={!isFormValid} onClick={this.getInvestorsDue}>Submit</button>
+                    <div className="date-pick1 pos-relative mright0">
+                      <button type="button" className="investorSubmit" disabled={!isFormValid} onClick={this.getInvestorsDue}>Submit</button>
+                    </div>
                   </div>
                 </div>
               </div>
               <CustTable tokenList={investorsList} tableHead={this.tableHead}
-                page={page} perPage={2} isInvestorsDue handlePageChange={this.handlePageChange} />
+                page={page} perPage={10} isInvestorsDue handlePageChange={this.handlePageChange} />
               <div className="clearfix"></div>
             </div>
           </div>

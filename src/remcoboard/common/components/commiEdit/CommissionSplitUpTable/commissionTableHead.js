@@ -1,16 +1,13 @@
 import React, { Fragment } from 'react';
+import _map from 'lodash/map';
+import Pagination from 'react-js-pagination';
+
 import CommissionTableRow from './commissionTableRow';
 
 export default class CommissionTableHead extends React.Component {
   render() {
-    const { investorList } = this.props;
-    var onProductTableUpdate = this.props.onProductTableUpdate;
-    var perOfInvestorError = this.props.perOfInvestorError;
-    var commissionEmailIdError = this.props.commissionEmailIdError;
-    var commissionDetail = this.props.vTNCommissionDTO.map(function (commissionDetail) {
-      return (<CommissionTableRow onProductTableUpdate={onProductTableUpdate} investorList={investorList} commissionEmailIdError={commissionEmailIdError}
-        commissionDetail={commissionDetail} key={commissionDetail.id} perOfInvestorError={perOfInvestorError} />)
-    });
+    const { investorList, handlePageChange, page, perPage, vTNCommissionDTO, onProductTableUpdate,
+      perOfInvestorError, commissionEmailIdError, isEdit, commissionPage } = this.props;
     return (
       <Fragment>
         <div className="feesallowed-table">
@@ -34,39 +31,43 @@ export default class CommissionTableHead extends React.Component {
                       </tr>
                     </thead>
                     <tbody>
-                      {commissionDetail}
+                      {isEdit && <Fragment> {_map(vTNCommissionDTO, (commissionDetail, i) => {
+                        return (
+                          page * perPage > i &&
+                            (page - 1) * perPage <= i &&
+                            <CommissionTableRow onProductTableUpdate={onProductTableUpdate}
+                              investorList={investorList} commissionEmailIdError={commissionEmailIdError}
+                              commissionDetail={commissionDetail} key={i} perOfInvestorError={perOfInvestorError} />
+                        )
+                      })
+                      } </Fragment>}
+                      {!isEdit && <Fragment> {_map(vTNCommissionDTO, (commissionDetail, i) => {
+                        return (
+                          <CommissionTableRow onProductTableUpdate={onProductTableUpdate}
+                            investorList={investorList} commissionEmailIdError={commissionEmailIdError}
+                            commissionDetail={commissionDetail} key={i} perOfInvestorError={perOfInvestorError} />
+                        )
+                      })
+                      } </Fragment>}
                     </tbody>
                   </table>
                 </div>
               </div>
-              {/* <div className="datatable-pagination">
-                                    <ul className="pagination">
-                                      <li>
-                                        <a className="pagelink" href="javascript:void(0);">Previous</a>
-                                      </li>
-                                      <li>
-                                        <a className="active" href="javascript:void(0);">1</a>
-                                      </li>
-                                      <li>
-                                        <a href="javascript:void(0);">1</a>
-                                      </li>
-                                      <li>
-                                        <a href="javascript:void(0);">2</a>
-                                      </li>
-                                      <li>
-                                        <a href="javascript:void(0);">3</a>
-                                      </li>
-                                      <li>
-                                        <a href="javascript:void(0);">4</a>
-                                      </li>
-                                      <li>
-                                        <a href="javascript:void(0);">5</a>
-                                      </li>
-                                      <li>
-                                        <a className="pagelink" href="javascript:void(0);">Next</a>
-                                      </li>
-                                    </ul>
-                                  </div> */}
+              <div className="datatable-pagination">
+                {vTNCommissionDTO.length > 3 && isEdit &&
+                  <Pagination
+                    prevPageText='Previous'
+                    nextPageText='Next'
+                    hideFirstLastPages
+                    activePage={page}
+                    activeLinkClass='active'
+                    linkClassPrev='active'
+                    linkClassNext='active'
+                    itemsCountPerPage={perPage}
+                    totalItemsCount={vTNCommissionDTO.length}
+                    onChange={(page) => handlePageChange(page)} />
+                }
+              </div>
             </div>
           </div>
         </div>

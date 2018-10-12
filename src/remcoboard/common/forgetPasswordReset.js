@@ -39,11 +39,14 @@ class ForgetPasswordReset extends React.Component {
           if (response.status === 200) {
             this.setState({ resetInfo: response.data.linkVerificationInfo });
           } else if (response.status === 206) {
+            this.props.history.push('/login');
             notify.show(response.data.message, 'error');
           }
         })
         .catch(function (error) {
-          console.log(error)
+          sessionStorage.removeItem('loginInfo');
+          this.props.history.push('/login');
+          notify.show(error.response.data.message, 'error')
         });
     }
   }
@@ -61,7 +64,7 @@ class ForgetPasswordReset extends React.Component {
     let confirmPasswordValid = this.state.confirmPasswordValid;
     if (this.state.password) {
       if (fieldName === 'password') {
-        this.state.passwordValid = value.length >= 8 && value.match(/^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{8,}$/);
+        this.state.passwordValid = value.length >= 8 && value.match(/(?=.*[_!@#$%^&*-])(?=.*\d)(?!.*[.\n])(?=.*[a-z])(?=.*[A-Z])^.{8,}$/);
         fieldValidateErrors.password = this.state.passwordValid ? '' : 'Password must contain atleast one uppercase, one lowercase, one number, one special character and must contain minimum 8 character.';
 
         if (this.state.confirmPassword !== '') {
@@ -111,7 +114,9 @@ class ForgetPasswordReset extends React.Component {
           notify.show(response.data.message, 'error');
         }
       }).catch(function (error) {
-        console.log(error)
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       });
   }
 
@@ -134,13 +139,8 @@ class ForgetPasswordReset extends React.Component {
               <div className="logo-div"></div>
               <h1>Reset Password</h1>
             </div>
-
             <div className="login-form">
               <form onSubmit={this.forgetPasswordReset} >
-                {/* <div className="form-group">
-                                <input type="password" placeholder="Old Password"/>
-                                    <span className="error">This value is required</span>
-                    </div> */}
                 <div className="form-group">
                   <input type="password" placeholder="New Password" name="password" value={this.state.password} onChange={this.handleChangePwd} />
                   <span className="error">{this.state.errors.password}</span>
@@ -150,10 +150,9 @@ class ForgetPasswordReset extends React.Component {
                   <span className="error">{this.state.errors.confirmPassword}</span>
                 </div>
                 <div className="form-group">
-                  <button type="submit" className="loginbtn-submit green" disabled={!this.state.formValid}>submit</button>
+                  <button type="submit" className="loginbtn-submit green" disabled={!this.state.formValid}>Submit</button>
                 </div>
                 <NavLink className="forgpwd" to='/login'>Click here to Login</NavLink>
-
               </form>
             </div>
           </div>

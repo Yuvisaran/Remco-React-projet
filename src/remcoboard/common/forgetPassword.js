@@ -64,17 +64,19 @@ class ForgetPassword extends React.Component {
           notify.show(response.data.message, 'error');
         }
       }).catch(error => {
-        console.log(error);
         if (error.response.status == 401) {
           sessionStorage.removeItem('loginInfo');
           this.props.history.push('/login');
-          notify.show(error.response.data.message, "error")
+          notify.show(error.response.data.message, 'error')
+        } else {
+          sessionStorage.removeItem('loginInfo');
+          this.props.history.push('/login');
+          notify.show(error.response.data.message, 'error')
         }
       });
   }
 
   render() {
-    // Forget Password
     return (
       <div>
         <Notifications />
@@ -99,16 +101,14 @@ class ForgetPassword extends React.Component {
                   <input type="text" placeholder="Email Id" name="emailId" value={this.state.emailId} onChange={this.handleChange} />
                   <label className="error">
                     <div>{this.state.errors.emailId}</div>
-                  </label>
-                  <div className="form-group">
-                    <button type="submit" className="loginbtn-submit green" disabled={!this.state.formValid}>Send</button>
-                  </div>
-                  <div className="form-group text-right">
-                    <p>Click here to
-                      <NavLink to={'/login'} > Login</NavLink>
-                    </p>
-                    {/* <NavLink className="clickHere" to='/login'>Click here to Login</NavLink> */}
-                  </div>
+                  </label> </div>
+                <div className="form-group">
+                  <button type="submit" className="loginbtn-submit green" disabled={!this.state.formValid}>Send</button>
+                </div>
+                <div className="form-group text-right">
+                  <p>Click here to
+                    <NavLink to={'/login'} > Login</NavLink>
+                  </p>
                 </div>
               </form>
             </div>

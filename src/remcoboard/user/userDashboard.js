@@ -1,9 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { NavLink } from 'react-router-dom';
-import { SyncLoader } from 'react-spinners';
 import Notifications, { notify } from 'react-notify-toast';
-import validator from 'validator';
 
 import { base_url } from '../common/apiUrl';
 import SideMenu from '../common/sideMenu';
@@ -13,20 +10,35 @@ import RecTrans from '../common/dashComponents/recTrans';
 class UserDashboard extends React.Component {
   constructor(props) {
     super(props);
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    console.log(sessionInfo.loginInfo)
-    const roleId = sessionInfo.loginInfo.role;
     this.state = {
-      role: roleId,
-      token: sessionInfo.loginInfo.token,
+      role: '',
+      token: '',
       tokenList: [],
       transList: []
-
+    }
+    /* eslint-disable */
+    {/*  prevent to go previous page (login) */ }
+    if (sessionStorage.getItem('loginInfo') != null) {
+      history.pushState(null, null, location.href);
+      window.onpopstate = function (event) {
+        history.go(0);
+      };
+    }
+    // Check authorized or not
+    if (sessionStorage.getItem('loginInfo') == null) {
+      props.history.push('/login');
     }
   }
+  /* eslint-enable */
 
+  UNSAFE_componentWillMount() {
+    if (sessionStorage.getItem('loginInfo') != null) {
+      const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+      this.setState({ role: sessionInfo.loginInfo.role, token: sessionInfo.loginInfo.token });
+    }
+  }
   componentDidMount() {
-    const transUrl = base_url + 'admin/token/transaction/recent/list';
+    const transUrl = base_url + 'admin/token/transaction/company/recent/list';
     this.setState({ isLoading: true });
     axios.get(transUrl, {
       'headers': {
@@ -37,7 +49,7 @@ class UserDashboard extends React.Component {
       this.setState({ isLoading: false });
       if (response.status === 200) {
         this.setState({ transList: response.data.tokenDTO });
-      } else if (response.status === 206 && response.data.message === 'Session expired') {
+      } else if (response.status === 206 && response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
@@ -45,11 +57,17 @@ class UserDashboard extends React.Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
-      if (error.response.status == 401) {
+      if (error.response.status === 401 && error.response.data.message === 'Auth token wrong') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+      } else if (error.response.status === 401) {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
 
@@ -64,7 +82,7 @@ class UserDashboard extends React.Component {
       this.setState({ isLoading: false });
       if (response.status === 200) {
         this.setState({ tokenList: response.data.tokenDT });
-      } else if (response.status === 206 && response.data.message === 'Session expired') {
+      } else if (response.status === 206 && response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
@@ -72,23 +90,24 @@ class UserDashboard extends React.Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
-      if (error.response.status == 401) {
+      if (error.response.status === 401 && error.response.data.message === 'Auth token wrong') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+      } else if (error.response.status === 401) {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
 
   render() {
-    console.log(this.props)
-    const { tokenList, transList } = this.state;
+    const { tokenList, transList, role } = this.state;
     return (
       <div>
         <Notifications />
         <div className="cbp-spmenu-push">
-          <SideMenu propsRole={this.state.role} />
+          <SideMenu propsRole={role} />
           <HeaderCommon propsPush={this.props} />
           <div id="page-wrapper">
             <div className="main-page">
@@ -98,7 +117,7 @@ class UserDashboard extends React.Component {
                     <div className="user-boxlist">
                       <h1>Number of Tokens Generated (Total)</h1>
                       <div className="userbody">
-                        <h2>{tokenList.tokenListCount}</h2>
+                        <h2>{tokenList.totalNoOfTokens}</h2>
                       </div>
                     </div>
                   </div>
@@ -129,77 +148,6 @@ class UserDashboard extends React.Component {
                 </div>
               </div>
               <RecTrans transList={transList} isUser />
-              {/* <div className="recentTransaction">
-                <div className="row">
-                  <div className="col-lg-6 col-sm-12 col-xs-12 mobilepadd">
-                    <div className="transactionhistory">
-                      <h1>Recent Transaction</h1>
-                      <div className="table-responsive">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Token Number</th>
-                              <th className="text-center">Amount</th>
-                              <th>type</th>
-                              <th>Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td>848632007</td>
-                              <td className="text-center">50</td>
-                              <td>Credit</td>
-                              <td>Apr 21, 2017
-                                <span>8:34am</span>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>848632007</td>
-                              <td className="text-center">50</td>
-                              <td>Credit</td>
-                              <td>Apr 21, 2017
-                                <span>8:34am</span>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>848632007</td>
-                              <td className="text-center">50</td>
-                              <td>Credit</td>
-                              <td>Apr 21, 2017
-                                <span>8:34am</span>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>848632007</td>
-                              <td className="text-center">50</td>
-                              <td>Credit</td>
-                              <td>Apr 21, 2017
-                                <span>8:34am</span>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>848632007</td>
-                              <td className="text-center">50</td>
-                              <td>Credit</td>
-                              <td>Apr 21, 2017
-                                <span>8:34am</span>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>848632007</td>
-                              <td className="text-center">50</td>
-                              <td>Credit</td>
-                              <td>Apr 21, 2017
-                                <span>8:34am</span>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
         </div>

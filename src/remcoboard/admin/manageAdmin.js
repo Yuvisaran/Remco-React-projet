@@ -8,15 +8,14 @@ import validator from 'validator';
 import SideMenu from '../common/sideMenu';
 import HeaderCommon from '../common/header';
 import CustSearch from '../common/custSearch';
+import validateip from 'validate-ip';
 
 class ManageAdmin extends React.Component {
   constructor(props) {
     super(props);
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    const roleId = sessionInfo.loginInfo.role;
     this.state = {
-      role: roleId,
-      token: sessionInfo.loginInfo.token,
+      role: '',
+      token: '',
       adminName: '',
       emailId: '',
       mobileNo: '',
@@ -61,8 +60,16 @@ class ManageAdmin extends React.Component {
       editstatusvalid: true,
       editformValid: true,
       isEditadminform: false,
-      page: 1
+      page: 1,
+      errIpAddress: '',
+      errEditIpAddress: '',
+      delId: '',
+      isDel: false
 
+    }
+    // Check authorized or not
+    if (sessionStorage.getItem('loginInfo') == null) {
+      props.history.push('/login');
     }
 
     this.handleChange = this.handleChange.bind(this);
@@ -75,11 +82,18 @@ class ManageAdmin extends React.Component {
   }
 
   UNSAFE_componentWillMount() {
+    if (sessionStorage.getItem('loginInfo') != null) {
+      const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+      this.setState({ role: sessionInfo.loginInfo.role, token: sessionInfo.loginInfo.token });
+    }
+  }
+
+  componentDidMount() {
     this.listAdmin();
   }
+
   listAdmin() {
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    console.log(sessionInfo.loginInfo.sessionId)
+    // API request for admin list
     const api_url = base_url + 'admin/list/admin';
     axios.get(api_url, {
       'headers': {
@@ -89,26 +103,32 @@ class ManageAdmin extends React.Component {
     }).then(response => {
       if (response.status === 200) {
         this.setState({ listArray: response.data.userList })
-      } else if (response.data.message === 'Session expired!') {
+      } else if (response.data.message === 'Page Session has expired. Please login again!') {
         this.props.history.push('/login');
         notify.show(response.data.message, 'error');
       } else {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
-      if (error.response.status == 401) {
+      if (error.response.status === 401 && error.response.data.message === 'Auth token wrong') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+      } else if (error.response.status === 401) {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
+
   handleChangeEdit(e) {
     const value = e.target.value;
     const name = e.target.name;
     this.setState({ [name]: value }, () => { this.validateFieldEdit(name, value) });
-    console.log(value)
   }
 
   validateFieldEdit(fieldName, value) {
@@ -121,10 +141,6 @@ class ManageAdmin extends React.Component {
       case 'editMobileNo':
         this.state.editmobileNovalid = validator.isNumeric(value) && validator.isLength(value, 5, 20);
         fieldValidationErrors.editMobileNo = this.state.editmobileNovalid ? '' : 'Valid international mobile number length is 5 to 20.';
-        break;
-      case 'editIpAddress':
-        this.state.editipAddressvalid = value.match(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/);
-        fieldValidationErrors.editIpAddress = this.state.editipAddressvalid ? '' : 'Please enter valid IP address.';
         break;
       case 'editStatus':
         this.state.editstatusvalid = !validator.isEmpty(value);
@@ -140,13 +156,11 @@ class ManageAdmin extends React.Component {
     this.setState({
       editformValid: this.state.editadminNamevalid &&
         this.state.editmobileNovalid &&
-        this.state.editipAddressvalid &&
         this.state.editstatusvalid
     })
   }
 
   handlePageChange = (page) => {
-    console.log('pageno', page)
     this.setState({ page })
   }
 
@@ -155,9 +169,9 @@ class ManageAdmin extends React.Component {
     const name = e.target.name;
     this.setState({ [name]: value }, () => { this.validateField(name, value) });
   }
+
   validateField(fieldName, value) {
     let fieldValidationErrors = this.state.errors;
-
     switch (fieldName) {
       case 'adminName':
         this.state.adminNamevalid = !validator.isEmpty(value);
@@ -172,25 +186,21 @@ class ManageAdmin extends React.Component {
         fieldValidationErrors.emailId = this.state.emailIdvalid ? '' : 'Please enter valid email.';
         break;
       case 'password':
-        this.state.passwordvalid = value.length >= 8 && value.match(/^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{8,}$/);
+        this.state.passwordvalid = value.length >= 8 && value.match(/(?=.*[_!@#$%^&*-])(?=.*\d)(?!.*[.\n])(?=.*[a-z])(?=.*[A-Z])^.{8,}$/);
         fieldValidationErrors.password = this.state.passwordvalid ? '' : 'Password must contain atleast one uppercase, one lowercase, one number, one special character and must contain minimum 8 character.';
         break;
       case 'confirmPassword':
         this.state.confirmPasswordvalid = validator.equals(value, this.state.password);
         fieldValidationErrors.confirmPassword = this.state.confirmPasswordvalid ? '' : 'Password does not match.';
         break;
-      case 'ipAddress':
-        this.state.ipAddressvalid = value.match(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/);
-        fieldValidationErrors.ipAddress = this.state.ipAddressvalid ? '' : 'Please enter valid IP address.';
-        break;
       case 'status':
         this.state.statusvalid = !validator.isEmpty(value);
         fieldValidationErrors.status = this.state.statusvalid ? '' : 'Please select status.';
         break;
-
       default:
         break;
     }
+
     if (fieldName === 'password') {
       if (this.state.confirmPassword !== '') {
         if (value !== this.state.confirmPassword) {
@@ -208,6 +218,7 @@ class ManageAdmin extends React.Component {
     }
     this.setState({ errors: fieldValidationErrors }, this.validateForm)
   }
+
   validateForm() {
     this.setState({
       formValid: this.state.adminNamevalid &&
@@ -215,15 +226,43 @@ class ManageAdmin extends React.Component {
         this.state.emailIdvalid &&
         this.state.passwordvalid &&
         this.state.confirmPasswordvalid &&
-        this.state.ipAddressvalid &&
         this.state.statusvalid
     })
-    console.log('formvalid', this.state.formValid)
+  }
+
+  // Function for multiple ip seperated by comma validation
+  toggleIpValidate = () => {
+    const commaLen = (this.state.ipAddress.match(/,/g) || []).length;
+    for (let i = 0; i <= commaLen; i++) {
+      var res = this.state.ipAddress.split(',')[i];
+      this.state.ipAddressvalid = validateip(res);
+      let errIpAddress = this.state.ipAddressvalid ? '' : 'Please enter valid IP address.';
+      this.setState(prevState => (prevState.errIpAddress !== errIpAddress ? { errIpAddress } : null));
+      if (this.state.ipAddressvalid == false) { break; }
+    }
+    if (this.state.ipAddressvalid) {
+      this.createAdmin();
+    }
+  }
+
+  // Function for multiple ip seperated by comma validation
+  toggleEditAdminIpValidate = () => {
+    const commaLen = (this.state.editIpAddress.match(/,/g) || []).length;
+    for (let i = 0; i <= commaLen; i++) {
+      var res = this.state.editIpAddress.split(',')[i];
+      this.state.editipAddressvalid = validateip(res);
+      let errEditIpAddress = this.state.editipAddressvalid ? '' : 'Please enter valid IP address.';
+      this.setState(prevState => (prevState.errEditIpAddress !== errEditIpAddress ? { errEditIpAddress } : null));
+      if (this.state.editipAddressvalid == false) { break; }
+    }
+    if (this.state.editipAddressvalid) {
+      this.updateAdmin();
+    }
   }
 
   createAdmin() {
+    // API request for create admin
     this.setState({ loading: true })
-    console.log('active', this.state.status)
     const payLoad = {
       'adminName': this.state.adminName,
       'emailId': this.state.emailId,
@@ -233,7 +272,6 @@ class ManageAdmin extends React.Component {
       'ipAddress': this.state.ipAddress,
       'status': this.state.status
     }
-
     const api_url = base_url + 'admin/create';
     axios.post(api_url, payLoad, {
       'headers': {
@@ -255,7 +293,7 @@ class ManageAdmin extends React.Component {
           status: ''
         })
         notify.show(response.data.message, 'success');
-      } else if (response.data.message === 'Session expired!') {
+      } else if (response.data.message === 'Page Session has expired. Please login again!') {
         this.setState({ iscreateadminForm: false })
 
         this.props.history.push('/login');
@@ -264,16 +302,20 @@ class ManageAdmin extends React.Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
+
   viewAdmin = (each) => {
-    console.log('viewadmin', each)
+    // API request for view admin
     this.setState({ isEditadminform: true })
     let payLoad = {
       'id': each.id
@@ -296,28 +338,31 @@ class ManageAdmin extends React.Component {
           editStatus: response.data.registerInfo.status,
           id: response.data.registerInfo.id
         })
-      } else if (response.data.message === 'Session expired!') {
+      } else if (response.data.message === 'Page Session has expired. Please login again!') {
         this.props.history.push('/login');
         notify.show(response.data.message, 'error');
       } else {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
+
   updateAdmin() {
+    // API request for update admin
     this.setState({ loading: true })
     let payLoad = {
-      'id': this.state.id,
       'mobileNo': this.state.editMobileNo,
       'emailId': this.state.editEmailId,
-      // "password": this.state.editPassword,
       'adminName': this.state.editAdminName,
       'ipAddress': this.state.editIpAddress,
       'status': this.state.editStatus
@@ -330,12 +375,11 @@ class ManageAdmin extends React.Component {
       }
     }).then(response => {
       this.setState({ loading: false })
-      console.log('update success', response)
       if (response.status === 200) {
         this.setState({ isEditadminform: false })
         notify.show(response.data.message, 'success');
         this.listAdmin();
-      } else if (response.data.message === 'Session expired!') {
+      } else if (response.data.message === 'Page Session has expired. Please login again!') {
         this.setState({ isEditadminform: false })
 
         this.props.history.push('/login');
@@ -344,19 +388,31 @@ class ManageAdmin extends React.Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
 
-  deleteAdmin = (each) => {
+  toggleDeleteAdmin = (each) => {
+    this.setState({ delId: each.id, isDel: true });
+  }
+
+  toggleDeleteAdminCancel = () => {
+    this.setState({ delId: '', isDel: false });
+  }
+
+  deleteAdmin = () => {
+    // API request for delete admin
     this.setState({ loading: true })
     let payLoad = {
-      'id': each.id
+      'id': this.state.delId
     }
     const api_url = base_url + 'admin/delete';
     axios.post(api_url, payLoad, {
@@ -369,38 +425,42 @@ class ManageAdmin extends React.Component {
       if (response.status === 200) {
         notify.show(response.data.message, 'success');
         this.listAdmin();
-      } else if (response.data.message === 'Session expired!') {
+      } else if (response.data.message === 'Page Session has expired. Please login again!') {
         this.props.history.push('/login');
         notify.show(response.data.message, 'error');
       } else {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
+
   tableHead = ['Admin Name', 'Phone', 'Email', 'IP Address', 'Status', 'Action'];
 
   render() {
-    const { listArray, page } = this.state;
+    const { listArray, page, role, loading, isDel } = this.state;
     return (
       <div>
         <Notifications />
         <div className="cbp-spmenu-push">
-          <SideMenu propsRole={this.state.role} />
-          <HeaderCommon />
+          <SideMenu propsRole={role} />
+          <HeaderCommon propsPush={this.props} />
           <div id="page-wrapper">
             {
-              this.state.loading && <div className="loaderBg">
+              loading && <div className="loaderBg">
                 <div className="loaderimg">
                   <SyncLoader
                     color={'#0f99dd'}
-                    loading={this.state.loading}
+                    loading={loading}
                   /></div>
               </div>
             }
@@ -425,94 +485,30 @@ class ManageAdmin extends React.Component {
               }} data-toggle="modal" data-target="#createnewadmin" data-backdrop="static">
                 <img src="src/public/image/adduser.png" alt="userImage" /> Create New Admin
               </button>
-              <CustSearch tokenList={listArray} tableHead={this.tableHead} deleteAdmin={this.deleteAdmin}
-                page={page} perPage={2} isMangeAdmin handlePageChange={this.handlePageChange} viewAdmin={this.viewAdmin} />
-              {/* <div className="searchbox">
-                <div className="searchicon">
-                  <input type="text" placeholder="Enter Your Search..." />
-                  <i className="fa fa-search" aria-hidden="true"></i>
-                </div>
-              </div>
-              <div className="remittance-tabledetails">
-                <div className="table-details table-responsive">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Admin Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>IP Address</th>
-                        <th className="text-center">Status</th>
-                        <th className="text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {this.state.listArray.map((each, i) =>
-                        <tr key={i}>
-                          <td>{each.adminName}</td>
-                          <td>{each.mobileNo}</td>
-                          <td>{each.emailId}</td>
-                          <td>{each.ipAddress}</td>
-                          {(each.status === '1' ? (
-                            <td className="text-center">
-                              <button type="button" className="btn-pend green">Active</button>
-                            </td>) : <td className="text-center">
-                            <button type="button" className="btn-pend darkorange">InActive</button>
-                          </td>)}
-                          <td className="text-center">
-                            <a onClick={() => { this.viewAdmin(each.id) }} className="darkblue" data-toggle="tooltip" title="Edit">
-                              <i className="fa fa-pencil" aria-hidden="true"></i>
-                            </a>
-                            <a onClick={() => { this.deleteAdmin(each.id) }} className="darkorange" data-toggle="tooltip" title="Delete">
-                              <i className="fa fa-trash-o" aria-hidden="true"></i>
-                            </a>
-                          </td>
-                        </tr>)}
-
-                    </tbody>
-                  </table>
-                </div>
-                <div className="datatable-pagination">
-                  <ul className="pagination">
-                    <li>
-                      <a className="pagelink" href="javascript:void(0);">Previous</a>
-                    </li>
-                    <li>
-                      <a className="active" href="javascript:void(0);">1</a>
-                    </li>
-                    <li>
-                      <a href="javascript:void(0);">1</a>
-                    </li>
-                    <li>
-                      <a href="javascript:void(0);">2</a>
-                    </li>
-                    <li>
-                      <a href="javascript:void(0);">3</a>
-                    </li>
-                    <li>
-                      <a href="javascript:void(0);">4</a>
-                    </li>
-                    <li>
-                      <a href="javascript:void(0);">5</a>
-                    </li>
-                    <li>
-                      <a className="pagelink" href="javascript:void(0);">Next</a>
-                    </li>
-                  </ul>
-                </div>
-              </div> */}
+              <CustSearch tokenList={listArray} tableHead={this.tableHead} deleteAdmin={this.toggleDeleteAdmin}
+                page={page} perPage={10} isMangeAdmin handlePageChange={this.handlePageChange} viewAdmin={this.viewAdmin} />
             </div>
           </div>
         </div>
-        {/* <!-- Create New Admin Popup --> */}
 
+        {/* <!-- Create New Admin Popup --> */}
         {this.state.iscreateadminForm &&
           <div className="createnew-admin">
             <div className="modal fade in" id="createnewadmin" role="dialog">
               <div className="modal-dialog">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <button type="button" className="close" onClick={() => this.setState({ iscreateadminForm: false })}>&times;</button>
+                    <button type="button" className="close" onClick={() => this.setState({
+                      iscreateadminForm: false,
+                      adminName: '',
+                      mobileNo: '',
+                      emailId: '',
+                      password: '',
+                      confirmPassword: '',
+                      ipAddress: '',
+                      status: '',
+                      errors: ''
+                    })}>&times;</button>
                     <h4 className="modal-title">Create New Admin</h4>
                   </div>
                   <div className="modal-body">
@@ -546,8 +542,7 @@ class ManageAdmin extends React.Component {
                         <div className="form-group">
                           <label>IP Address</label>
                           <input type="text" name='ipAddress' value={this.state.ipAddress} onChange={this.handleChange} placeholder="IP Address" />
-
-                          <span className="error">{this.state.errors.ipAddress}</span>
+                          <span className="error">{this.state.errIpAddress}</span>
                         </div>
                         <div className="form-group">
                           <label>Status</label>
@@ -555,14 +550,24 @@ class ManageAdmin extends React.Component {
                             <select className="act-inact-select" name='status' value={this.state.status} onChange={this.handleChange}>
                               <option className="green-text" value="">Select Status</option>
                               <option className="green-text" value="1">Active</option>
-                              <option className="red-text" value="0">InActive</option>
+                              <option className="red-text" value="0">Inactive</option>
                             </select>
                             <span className="error">{this.state.errors.status}</span>
                           </div>
                         </div>
                         <div className="form-group btngrouptop">
-                          <button type="button" onClick={() => this.setState({ iscreateadminForm: false })} className="cancelbtn">Cancel</button>
-                          <button type="button" onClick={this.createAdmin} disabled={!this.state.formValid} className="submitbtn">Submit</button>
+                          <button type="button" onClick={() => this.setState({
+                            iscreateadminForm: false,
+                            adminName: '',
+                            mobileNo: '',
+                            emailId: '',
+                            password: '',
+                            confirmPassword: '',
+                            ipAddress: '',
+                            status: '',
+                            errors: ''
+                          })} className="cancelbtn">Cancel</button>
+                          <button type="button" onClick={this.toggleIpValidate} disabled={!this.state.formValid} className="submitbtn">Submit</button>
                         </div>
                       </form>
                     </div>
@@ -626,7 +631,7 @@ class ManageAdmin extends React.Component {
                           <label>IP Address</label>
                           <input type="text" name='editIpAddress' value={this.state.editIpAddress} onChange={this.handleChangeEdit} placeholder="IP Address" />
 
-                          <span className="error">{this.state.errors.editIpAddress}</span>
+                          <span className="error">{this.state.errEditIpAddress}</span>
                         </div>
                         <div className="form-group">
                           <label>Status</label>
@@ -634,7 +639,7 @@ class ManageAdmin extends React.Component {
                             <select className="act-inact-select" name='editStatus' value={this.state.editStatus} onChange={this.handleChangeEdit}>
                               <option className="green-text" value=''>Select Status</option>
                               <option className="green-text" value="1">Active</option>
-                              <option className="red-text" value="0">InActive</option>
+                              <option className="red-text" value="0">Inactive</option>
                             </select>
                             <span className="error">{this.state.errors.editStatus}</span>
                           </div>
@@ -653,7 +658,7 @@ class ManageAdmin extends React.Component {
 
                             })
                           }} className="cancelbtn">Cancel</button>
-                          <button type="button" onClick={this.updateAdmin} disabled={!this.state.editformValid} className="submitbtn">Submit</button>
+                          <button type="button" onClick={this.toggleEditAdminIpValidate} disabled={!this.state.editformValid} className="submitbtn">Submit</button>
                         </div>
                       </form>
                     </div>
@@ -662,6 +667,31 @@ class ManageAdmin extends React.Component {
               </div>
             </div>
           </div>}
+        {isDel && <div className="fa-code-section deleteMessage approvpopup">
+          <div className="fa-code-div">
+            <div className="remittance-title modal-header"><h1>Delete This Administrator</h1><button type="button" className="clsebtn close" onClick={() => {
+              this.setState({ isDel: false, delId: '', delMsg: '' });
+            }
+            }>×</button></div>
+            <div className="fa-code-content">
+              <form>
+                <div className="delete-group-body"><p>Are you sure you would like to delete Administrator</p>
+                  <p> This will destroy account and cannot be undone!</p>
+                </div>
+                <input className="hightwidth" name="delMsg" value={this.state.delMsg} onChange={this.handleChange} placeholder="type DELETE here and click Delete button" />
+                <div className="commissionbtn">
+                  <button type="button" onClick={() => {
+                    this.setState({ isDel: false, delId: '', delMsg: '' });
+                  }} className="cancelbtn buttn-no">Back</button>
+                  <button type="button" disabled={this.state.delMsg != 'DELETE'} onClick={() => {
+                    this.deleteAdmin();
+                    this.setState({ isDel: false, delId: '' });
+                  }} className="commission-submit buttn-delete">Delete</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>}
       </div>
     )
   }

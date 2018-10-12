@@ -6,17 +6,17 @@ import FeeDeatilsTableRow from './tableRow';
 
 export default class FeeDeatilsTable extends React.Component {
   render() {
-    const { handlePageChange, page, perPage, percentageDTO, onProductTableUpdate, fixAmtError,
+    const { handlePageChange, isView, page, perPage, percentageDTO, onProductTableUpdate, fixAmtError,
       toAmtError, fromAmtError, perOfCommissionError } = this.props;
     return (
       <div>
         <div className="feesallowed-table">
-          <div className="fees-adddelete">
+          {!isView && <div className="fees-adddelete">
             <button type="button" className="addmorerow" onClick={this.props.onRowAdd} >
               <i className="fa fa-plus" aria-hidden="true"></i>Add More Row</button>
             <button type="button" className="deleterow" onClick={this.props.onRowDel}>
               <i className="fa fa-trash-o" aria-hidden="true"></i>Delete Row</button>
-          </div>
+          </div>}
           <div className="fees-verfytable">
             <div className="row">
               <div className="col-lg-12 col-sm-12 col-xs-12 mobilepadd">
@@ -27,13 +27,10 @@ export default class FeeDeatilsTable extends React.Component {
                         <th colSpan="3">Amount</th>
                         <th colSpan="3">Fee</th>
                       </tr>
-
                     </thead>
                     <tbody>
                       <tr>
-                        {/* TODO : need to integrate select all */}
                         <td>
-                          {/* <input type="checkbox" /> */}
                         </td>
                         <td className="fbd">From</td>
                         <td className="fbd">To</td>
@@ -41,7 +38,6 @@ export default class FeeDeatilsTable extends React.Component {
                         <td className="fbd">Percent(%)</td>
                       </tr>
                       {_map(percentageDTO, (feeDetail, i) => {
-                        console.log('content', feeDetail)
                         return (
                           page * perPage > i &&
                           (page - 1) * perPage <= i &&
@@ -55,7 +51,7 @@ export default class FeeDeatilsTable extends React.Component {
                   </table>
                 </div>
                 <div className="datatable-pagination">
-                  {percentageDTO.length > 0 &&
+                  {percentageDTO.length > 3 &&
                     <Pagination
                       prevPageText='Previous'
                       nextPageText='Next'

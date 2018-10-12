@@ -4,7 +4,6 @@ import { SyncLoader } from 'react-spinners';
 import Notifications, { notify } from 'react-notify-toast';
 import _filter from 'lodash/filter';
 import _map from 'lodash/map';
-import _remove from 'lodash/remove';
 import validateip from 'validate-ip';
 import validator from 'validator';
 
@@ -14,147 +13,147 @@ import { base_url } from '../common/apiUrl';
 import FeeDeatilsTable from '../common/components/commiEdit/FeeTable/tableHead';
 import CommissionTableHead from '../common/components/commiEdit/CommissionSplitUpTable/commissionTableHead';
 
-const initialState = {
-  investorsList: [],
-  page: 1,
-  isLoading: false,
-  isChecked: false,
-  companyName: '',
-  remitCommission: [],
-  firstName: '',
-  emailId: '',
-  provider: '',
-  phone: '',
-  city: '',
-  address: '',
-  accessToken: '',
-  accessKey: '',
-  ipAddressList: '',
-  transLimit: '',
-  isProviderValid: false,
-  isIpAddressListvalid: false,
-  isTransLimitValid: false,
-  formValid: false,
-  errors: {},
-  percentageDTO: [
-    {
-      id: 0,
-      fromAmount: '',
-      toAmount: '',
-      fixedAmountOfCommission: '',
-      percentageOfCommission: ''
-    }
-  ],
-  vTNCommissionDTO: [
-    {
-      id: 0,
-      emailId: '',
-      percentageOfInvestor: ''
-    }
-  ],
-  percentageDTOId: 0,
-  vTNCommissionDTOId: 0,
-  prcentageDtoRmv: [],
-  vTNCommissionDtoRmv: [],
-  deletedPercentageDto: [],
-  perOfInvestorError: [],
-  perOfCommissionError: [],
-  commissionEmailIdError: [],
-  fixAmtError: [],
-  toAmtError: [],
-  fromAmtError: [],
-  isPerOfInvestorValid: false,
-  isPerOfCommissionValid: false,
-  isFixAmtValid: false,
-  isToAmtValid: false,
-  isFromAmtValid: false,
-  isEmailIdValid: false,
-  isToAmtArrValid: false,
-  isFrmArrValid: false
-};
-
 export default class Commission extends Component {
   constructor(props) {
     super(props);
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    this.state = initialState;
+    this.state = {
+      investorsList: [],
+      page: 1,
+      commissionPage: 1,
+      isLoading: false,
+      isChecked: false,
+      companyName: '',
+      remitCommission: [],
+      firstName: '',
+      emailId: '',
+      provider: '',
+      phone: '',
+      city: '',
+      address: '',
+      accessToken: '',
+      accessKey: '',
+      ipAddressList: '',
+      transLimit: '',
+      isProviderValid: false,
+      isIpAddressListvalid: false,
+      isTransLimitValid: false,
+      formValid: false,
+      errors: {},
+      percentageDTO: [
+        {
+          percentageId: 0,
+          fromAmount: '',
+          toAmount: '',
+          fixedAmountOfCommission: '',
+          percentageOfCommission: ''
+        }
+      ],
+      vTNCommissionDTO: [
+        {
+          investorPercentageId: 0,
+          emailId: '',
+          percentageOfInvestor: ''
+        }
+      ],
+      percentageDTOId: 0,
+      vTNCommissionDTOId: 0,
+      prcentageDtoRmv: [],
+      vTNCommissionDtoRmv: [],
+      deletedPercentageDto: [],
+      perOfInvestorError: [],
+      perOfCommissionError: [],
+      commissionEmailIdError: [],
+      fixAmtError: [''], // to avoid 1st mounting undefined error
+      toAmtError: [''], // to avoid 1st mounting undefined error
+      fromAmtError: [''], // to avoid 1st mounting undefined error
+      isPerOfInvestorValid: false,
+      isPerOfCommissionValid: false,
+      isFixAmtValid: false,
+      isToAmtValid: false,
+      isFromAmtValid: false,
+      isEmailIdValid: false,
+      isToAmtArrValid: false,
+      isFrmArrValid: false,
+      role: '',
+      token: '',
+      errIpAddress: ''
+    };
+    // Check Authorised or not
+    if (sessionStorage.getItem('loginInfo') == null) {
+      props.history.push('/login');
+    }
   }
-  componentWillMount() {
-    if (this.props.location.state != null) {
-      this.editCommission();
+  UNSAFE_componentWillMount() {
+    if (sessionStorage.getItem('loginInfo') != null) {
+      const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+      this.setState({ role: sessionInfo.loginInfo.role, token: sessionInfo.loginInfo.token });
     }
   }
   componentDidMount() {
+    // API request for remittence registration approved user list in set commission
     const api_url = base_url + 'admin/list/commission/personinfo';
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
     axios.get(api_url, {
       'headers': {
-        'authToken': sessionInfo.loginInfo.token,
-        'ownerType': sessionInfo.loginInfo.role
+        'authToken': this.state.token,
+        'ownerType': this.state.role
       }
     }).then(response => {
-      console.log('listKyc', response.data.kycList);
       if (response.status === 200) {
         this.setState({ remitCompList: response.data.kycList });
-      } else if (response.data.message === 'Session Expired') {
+      } else if (response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
-      if (error.response.status == 401) {
+      if (error.response.status === 401 && error.response.data.message === 'Auth token wrong') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+      } else if (error.response.status === 401) {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
-  editCommission() {
-    console.log('will recieve props called', this.props.location.state);
-    this.setState({
-      companyName: this.props.location.state.companyName,
-      firstName: this.props.location.state.representativeName,
-      emailId: this.props.location.state.emailId,
-      provider: this.props.location.state.remittanceProvider,
-      phone: this.props.location.state.mobileNo,
-      city: this.props.location.state.city,
-      address: this.props.location.state.address,
-      accessToken: this.props.location.state.accessToken,
-      accessKey: this.props.location.state.accessKey,
-      ipAddressList: this.props.location.state.ipAddress,
-      transLimit: this.props.location.state.dailyTransactionLimit,
-      percentageDTO: this.props.location.state.percentageDTO,
-      vTNCommissionDTO: this.props.location.state.vTNCommissionDTO,
-      isChecked: !this.state.isChecked,
-      formValid: true
-    });
-  }
+
+  // Function for delete selected rows of precentageDTO in set commission
   handleRowDel() {
     if (this.state.prcentageDtoRmv.length !== this.state.percentageDTO.length) {
-      console.log('delete')
       let percentageDTO = [...this.state.percentageDTO];
+      let fromAmtError = [...this.state.fromAmtError];
+      let toAmtError = [...this.state.toAmtError];
       let prcentageDtoRmv = [...this.state.prcentageDtoRmv];
-      console.log('deleted progress', percentageDTO)
       for (let i = 0; i < percentageDTO.length; i++) {
         for (let j = 0; j < prcentageDtoRmv.length; j++) {
-          // console.log('fdgdgdfg', prcentageDtoRmv[j], percentageDTO[i].id)
-          if (percentageDTO[i].id == prcentageDtoRmv[j]) {
-            // if (prcentageDtoRmv[j] == percentageDTO[i].id) {
+          if (percentageDTO[i].percentageId == prcentageDtoRmv[j]) {
             percentageDTO.splice(i, 1);
-            this.setState({ percentageDTO });
-            console.log('pppppppppppp', this.state.percentageDTO)
+            toAmtError.splice(i, 1);
+            fromAmtError.splice(i, 1);
+            this.setState({ percentageDTO, toAmtError, fromAmtError }, () => this.amountValidation());
           }
         }
       }
       this.setState({ prcentageDtoRmv: [] });
-      console.log('deleted', this.state.percentageDTO, this.state.prcentageDtoRmv)
     } else notify.show('You Are Not Allow To Delete All Rows', 'error');
   }
+
+  handlePageChange = (page) => {
+    this.setState({ page })
+  }
+  handleCommissionPageChange = (commissionPage) => {
+    this.setState({ commissionPage })
+  }
+
+  // Function for Add rows of precentageDTO in set commission
   handleAddEvent(evt) {
     var id = this.state.percentageDTOId + 1;
     var feeDetail = {
-      id: id,
+      percentageId: id,
       percentageOfCommission: '',
       toAmount: '',
       fromAmount: '',
@@ -165,33 +164,28 @@ export default class Commission extends Component {
     this.setState({ percentageDTOId: id });
   }
 
+  // Onchange function for precentageDTO in set commission
   handleProductTable(evt) {
-    console.log('evevve', evt.target.id)
-    console.log('evevve', evt.target.checked)
-    console.log('evevve', evt.target.name)
-    if (evt.target.name === 'checkValue' && evt.target.checked === true) {
-      console.log('yuvi')
+    if (evt.target.name == 'checkValue' && evt.target.checked == true) {
       let prcentageDtoRmv = [...this.state.prcentageDtoRmv];
       prcentageDtoRmv.push(evt.target.id);
-      this.setState({ prcentageDtoRmv }, () => console.log('thisprsetremovAdd ids', this.state.prcentageDtoRmv));
-    } else if (evt.target.name === 'checkValue' && evt.target.checked === false) {
-      console.log('yuvi else part')
+      this.setState({ prcentageDtoRmv });
+    } else if (evt.target.name == 'checkValue' && evt.target.checked == false) {
       let prcentageDtoRmv = [...this.state.prcentageDtoRmv];
       var index = prcentageDtoRmv.indexOf(evt.target.id);
       prcentageDtoRmv.splice(index, 1);
-      this.setState({ prcentageDtoRmv }, () => console.log('thisprsetremoveDelete ids', this.state.prcentageDtoRmv));
+      this.setState({ prcentageDtoRmv });
     }
     var item = {
       id: evt.target.id,
       name: evt.target.name,
       value: evt.target.value
     };
-    // console.log('evet table ', this.state.percentageDTO.indexOf(evt.target.id))
     var percentageDTO = this.state.percentageDTO.slice();
     var newProducts = percentageDTO.map(function (feeDetail) {
       for (var key in feeDetail) {
-        if (key == item.name && feeDetail.id == item.id) {
-          const re = /^[0-9\b]+$/;
+        if (key == item.name && feeDetail.percentageId == item.id) {
+          const re = /^[0-9.]+$/;
           if (item.value === '' || re.test(item.value)) {
             feeDetail[key] = item.value;
           }
@@ -199,38 +193,31 @@ export default class Commission extends Component {
       }
       return feeDetail;
     });
-    this.setState({ percentageDTO: newProducts });
-    this.validateField(item.name, item.value, item.id);
-    //  console.log(this.state.percentageDTO);
+    this.setState({ percentageDTO: newProducts }, () => { this.validateField(item.name, item.value, item.id) });
   }
+
+  // Function for delete selected rows of CommissionSplitup in set commission
   clickCommiSplitRowDel(commissionDetail) {
     if (this.state.vTNCommissionDtoRmv.length !== this.state.vTNCommissionDTO.length) {
-      console.log('delete')
       let vTNCommissionDTO = [...this.state.vTNCommissionDTO];
       let vTNCommissionDtoRmv = [...this.state.vTNCommissionDtoRmv];
-      console.log('deleted progress', vTNCommissionDTO)
       for (let i = 0; i < vTNCommissionDTO.length; i++) {
         for (let j = 0; j < vTNCommissionDtoRmv.length; j++) {
-          console.log('fdgdgdfg', vTNCommissionDtoRmv[j], vTNCommissionDTO[i].id)
-          if (vTNCommissionDTO[i].id == vTNCommissionDtoRmv[j]) {
+          if (vTNCommissionDTO[i].investorPercentageId == vTNCommissionDtoRmv[j]) {
             vTNCommissionDTO.splice(i, 1);
             this.setState({ vTNCommissionDTO });
-            console.log('pppppppppppp', this.state.vTNCommissionDTO)
           }
         }
       }
       this.setState({ vTNCommissionDtoRmv: [] });
-      console.log('deleted', this.state.vTNCommissionDTO, this.state.vTNCommissionDtoRmv)
     } else notify.show('You Are Not Allow To Delete All Rows', 'error');
-    // var index = this.state.vTNCommissionDTO.indexOf(commissionDetail);
-    // this.state.vTNCommissionDTO.splice(index, 1);
-    // this.setState(this.state.vTNCommissionDTO);
   }
 
+  // Function for Add rows of CommissionSplitup in set commission
   clickCommiSplitAddRow(evt) {
     var id = this.state.vTNCommissionDTOId + 1;
     var commissionDetail = {
-      id: id,
+      investorPercentageId: id,
       percentageOfInvestor: '',
       emailId: ''
     }
@@ -239,18 +226,17 @@ export default class Commission extends Component {
     this.setState({ vTNCommissionDTOId: id });
   }
 
+  // Onchange function for commissionSplitup in set commission
   clickCommiSplitValuesChange(evt) {
     if (evt.target.name === 'checkValue' && evt.target.checked === true) {
-      console.log('yuvi')
       let vTNCommissionDtoRmv = [...this.state.vTNCommissionDtoRmv];
       vTNCommissionDtoRmv.push(evt.target.id);
-      this.setState({ vTNCommissionDtoRmv }, () => console.log('thisprsetremovAdd ids', this.state.vTNCommissionDtoRmv));
+      this.setState({ vTNCommissionDtoRmv });
     } else if (evt.target.name === 'checkValue' && evt.target.checked === false) {
-      console.log('yuvi else part')
       let vTNCommissionDtoRmv = [...this.state.vTNCommissionDtoRmv];
       var index = vTNCommissionDtoRmv.indexOf(evt.target.id);
       vTNCommissionDtoRmv.splice(index, 1);
-      this.setState({ vTNCommissionDtoRmv }, () => console.log('thisprsetremoveDelete ids', this.state.vTNCommissionDtoRmv));
+      this.setState({ vTNCommissionDtoRmv });
     }
     var item = {
       id: evt.target.id,
@@ -260,12 +246,12 @@ export default class Commission extends Component {
     var vTNCommissionDTO = this.state.vTNCommissionDTO.slice();
     var newProducts = vTNCommissionDTO.map(function (commissionDetail) {
       for (var key in commissionDetail) {
-        if (key == item.name && commissionDetail.id == item.id && item.name == 'percentageOfInvestor') {
-          const re = /^[0-9\b]+$/;
+        if (key == item.name && commissionDetail.investorPercentageId == item.id && item.name == 'percentageOfInvestor') {
+          const re = /^[0-9.]+$/;
           if (item.value === '' || re.test(item.value)) {
             commissionDetail[key] = item.value;
           }
-        } else if (key == item.name && commissionDetail.id == item.id) {
+        } else if (key == item.name && commissionDetail.investorPercentageId == item.id) {
           commissionDetail[key] = item.value;
         }
       }
@@ -273,17 +259,26 @@ export default class Commission extends Component {
     });
     this.setState({ vTNCommissionDTO: newProducts });
     this.validateField(item.name, item.value, item.id)
-    //  console.log(this.state.vTNCommissionDTO);
   }
+
+  // Function onChange it should accept only numbers
+  numChange = (e) => {
+    const value = e.target.value;
+    const name = e.target.name;
+    const re = /^[0-9.]+$/;
+    if (value === '' || re.test(value)) {
+      this.setState({ [name]: value }, () => { this.validateField(name, value) });
+    }
+  }
+
   handleChange = (e) => {
-    console.log('evet', e.target.name, e.target.value)
     const value = e.target.value;
     const name = e.target.name;
     this.setState({ [name]: value }, () => { this.validateField(name, value) });
   }
 
+  // Function for validate each fields
   validateField(fieldName, value, i) {
-    console.log(value, 'value')
     let fieldValidationErrors = this.state.errors;
     switch (fieldName) {
       case 'provider':
@@ -291,15 +286,15 @@ export default class Commission extends Component {
         fieldValidationErrors.provider = this.state.isProviderValid ? '' : 'Please enter remittance provider.';
         break;
       case 'transLimit':
-        this.state.isTransLimitValid = !validator.isEmpty(value);
+        this.state.isTransLimitValid = !validator.isEmpty(value) && validator.isNumeric(value);
         fieldValidationErrors.transLimit = this.state.isTransLimitValid ? '' : 'Please enter daily transaction limit.';
         break;
       case 'ipAddressList':
-        this.state.isIpAddressListvalid = validateip(value);
+        this.state.isIpAddressListvalid = !validator.isEmpty(value);
         fieldValidationErrors.ipAddressList = this.state.isIpAddressListvalid ? '' : 'Please enter valid IP address.';
         break;
       case 'percentageOfInvestor':
-        this.state.isPerOfInvestorValid = !(value > 100 || value < 1);
+        this.state.isPerOfInvestorValid = !validator.isEmpty(value) && validator.isNumeric(value) && !(value > 100 || value < 0.1);
         this.state.perOfInvestorError[i] = this.state.isPerOfInvestorValid ? '' : 'Please enter valid percentage.';
         break;
       case 'emailId':
@@ -307,54 +302,49 @@ export default class Commission extends Component {
         this.state.commissionEmailIdError[i] = this.state.isEmailIdValid ? '' : 'Please select email id.';
         break;
       case 'percentageOfCommission':
-        this.state.isPerOfCommissionValid = !(value > 100 || value < 1);
+        this.state.isPerOfCommissionValid = !validator.isEmpty(value) && validator.isNumeric(value) && !(value > 100 || value < 0.1);
         this.state.perOfCommissionError[i] = this.state.isPerOfCommissionValid ? '' : 'Please enter valid percentage.';
         break;
       case 'fixedAmountOfCommission':
-        this.state.isFixAmtValid = !validator.isEmpty(value);
+        this.state.isFixAmtValid = !validator.isEmpty(value) && validator.isNumeric(value);
         this.state.fixAmtError[i] = this.state.isFixAmtValid ? '' : 'Please enter fixed amount.';
         break;
       case 'fromAmount':
         this.amountValidation(value);
-        this.state.isFromAmtValid = !validator.isEmpty(value);
+        this.state.isFromAmtValid = !validator.isEmpty(value) && validator.isNumeric(value);
         this.state.fromAmtError[i] = this.state.isFromAmtValid ? '' : 'Please enter from amount.';
         break;
       case 'toAmount':
         this.amountValidation(value);
-        this.state.isToAmtValid = !validator.isEmpty(value);
+        this.state.isToAmtValid = !validator.isEmpty(value) && validator.isNumeric(value);
         this.state.toAmtError[i] = this.state.isToAmtValid ? '' : 'Please enter to amount.';
         break;
       default:
         break;
     }
-    // TODO Not working this code as expected
-    // _map(this.state.fromAmtError, (item, i) => {
-    //   try {
-    //     if (item.includes('Invalid "From Amount"') || item.includes('Please Enter "From Amount"')) {
-    //       this.setState({ isFrmArrValid: false }); return false;
-    //     } else this.setState({ isFrmArrValid: true });
-    //   }
-    //   catch (err) {
 
-    //   }
-    // })
-    // _map(this.state.toAmtError, (item, i) => {
-    //   try {
-    //     if (item.includes('Invalid "To Amount"') || item.includes('Please Enter "To Amount"')
-    //       || item.includes('"From Amount" value should be less than "To Amount"')) {
-    //       this.setState({ isToAmtArrValid: false }); return false;
-    //     }
-    //     else this.setState({ isToAmtArrValid: true });
-    //   }
-    //   catch (err) { }
-    // })
+    let fromAmtError = [...this.state.fromAmtError];
+    for (let i = 0; i < fromAmtError.length; i++) {
+      if (fromAmtError[i] == 'Please Enter "From Amount"' || fromAmtError[i] == 'Invalid "From Amount"') {
+        this.setState({ isFrmArrValid: false }, this.validateForm);
+        break;
+      } else this.setState({ isFrmArrValid: true }, this.validateForm);
+    }
+
+    let toAmtError = [...this.state.toAmtError];
+    for (let i = 0; i < toAmtError.length; i++) {
+      if (toAmtError[i] == 'Please Enter "To Amount"' || toAmtError[i] == 'Invalid "To Amount"' || toAmtError[i] == '"To Amount" value should be grater than "From Amount"') {
+        this.setState({ isToAmtArrValid: false }, this.validateForm);
+        break;
+      } else this.setState({ isToAmtArrValid: true }, this.validateForm);
+    }
+
     this.setState({ errors: fieldValidationErrors }, this.validateForm)
   }
 
   validateForm() {
     this.setState({
-      formValid: this.state.isIpAddressListvalid &&
-        this.state.isTransLimitValid &&
+      formValid: this.state.isTransLimitValid &&
         this.state.isProviderValid &&
         this.state.isEmailIdValid &&
         this.state.isPerOfCommissionValid &&
@@ -366,161 +356,205 @@ export default class Commission extends Component {
         this.state.isPerOfInvestorValid
     })
   }
+
+  // Function for validate from amount and to amount in precentage DTO table
   amountValidation = (value) => {
     let fromAmtError = [...this.state.fromAmtError];
     let toAmtError = [...this.state.toAmtError];
     for (let i = this.state.percentageDTO.length - 1; i >= 0; i--) {
-      console.log('lenths:', this.state.percentageDTO.length, 'to err:', this.state.toAmtError, 'fr err:', this.state.fromAmtError)
       let percentageDTO = [...this.state.percentageDTO];
       if (percentageDTO[i].fromAmount == '' && percentageDTO[i].toAmount == '') {
-        // delete fromAmtError[i];
-        // delete toAmtError[i];
-        // TODO ENable below 2 lines 
         fromAmtError[i] = ' ';
         toAmtError[i] = ' ';
       } else if (percentageDTO[i].fromAmount != '' && percentageDTO[i].toAmount == '') {
         toAmtError[i] = 'Please Enter "To Amount"';
         try {
           if (fromAmtError[i].includes('Please Enter "From Amount"')) {
-            // delete fromAmtError[i];
-            // TODO enable below line
             fromAmtError[i] = ' ';
           }
-        }
-        catch (err) {
-        }
+        } catch (err) { }
         for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
           if (j != i) {
             if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
-              if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
-                fromAmtError[i] = 'Invalid "From Amount"';
-                break;
-              }
-              else if (fromAmtError[i].includes('Invalid "From Amount"')) {
-                // delete fromAmtError[i];
-                //  TODO enable below line
-                fromAmtError[i] = ' ';
-              }
+              try {
+                if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
+                  fromAmtError[i] = 'Invalid "From Amount"';
+                  break;
+                } else if (fromAmtError[i].includes('Invalid "From Amount"')) {
+                  fromAmtError[i] = ' ';
+                }
+              } catch (err) { }
             }
           }
         }
       } else if (percentageDTO[i].fromAmount == '' && percentageDTO[i].toAmount != '') {
         fromAmtError[i] = 'Please Enter "From Amount"';
         try {
-          console.log('toAmtError[i] ', toAmtError[i]);
-          if (toAmtError[i].includes('"From Amount" value should be less than "To Amount"')) {
-            // delete toAmtError[i];
-            // TODO enable below line
+          if (toAmtError[i].includes('"To Amount" value should be grater than "From Amount"')) {
             toAmtError[i] = ' ';
           }
-
-        }
-        catch (err) {
-        }
-
+        } catch (err) { }
         try {
           if (toAmtError[i].includes('Please Enter "To Amount"')) {
-            // delete toAmtError[i];
-            // TODO enable below line
             toAmtError[i] = ' ';
           }
-        }
-        catch (err) { }
+        } catch (err) { }
         for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
-          if (j != i) {
-            if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
-              if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
-                toAmtError[i] = 'Invalid "To Amount"';
-                break;
-              }
-              else if (toAmtError[i].includes('Invalid "To Amount"')) {
-                // delete toAmtError[i];
-                // TODO enable below line
-                toAmtError[i] = ' ';
-              }
-            }
-          }
-        }
-
-      } else if (percentageDTO[i].fromAmount != '' && percentageDTO[i].toAmount != '') {
-        if (parseInt(percentageDTO[i].fromAmount) >= parseInt(percentageDTO[i].toAmount)) {
-          toAmtError[i] = '"From Amount" value should be less than "To Amount"';
-        }
-        else if ((parseInt(percentageDTO[i].fromAmount) < parseInt(percentageDTO[i].toAmount)) && (toAmtError[i].includes('"From Amount" value should be less than "To Amount"'))) {
-          // delete toAmtError[i];
-          // Todo enable below line
-          toAmtError[i] = ' ';
-        }
-
-        try {
-          if (fromAmtError[i].includes('Please Enter "From Amount"')) {
-            // delete fromAmtError[i];
-            // TODO enable below line
-            fromAmtError[i] = ' ';
-          }
-        }
-        catch (err) {
-        }
-        try {
-          if (toAmtError[i].includes('Please Enter "To Amount"')) {
-            // delete toAmtError[i];
-            // Todo enable below line
-            toAmtError[i] = ' ';
-          }
-        }
-        catch (err) { }
-        if (parseInt(value) == parseInt(percentageDTO[i].fromAmount)) {
-          for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
-            if (j != i) {
-              if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
-                if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
-                  fromAmtError[i] = 'Invalid "From Amount"';
-                  break;
-                }
-                else if (fromAmtError[i].includes('Invalid "From Amount"')) {
-                  // delete fromAmtError[i];
-                  // TODO enable below line
-                  fromAmtError[i] = ' ';
-                }
-              }
-            }
-          }
-        }
-        else if (parseInt(value) == parseInt(percentageDTO[i].toAmount)) {
-          for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
+          try {
             if (j != i) {
               if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
                 if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
                   toAmtError[i] = 'Invalid "To Amount"';
                   break;
-                }
-                else if (toAmtError[i].includes('Invalid "To Amount"')) {
-                  // delete toAmtError[i];
-                  // Todo enable below line
+                } else if (toAmtError[i].includes('Invalid "To Amount"')) {
                   toAmtError[i] = ' ';
                 }
               }
             }
+          } catch (err) { }
+        }
+      } else if (percentageDTO[i].fromAmount != '' && percentageDTO[i].toAmount != '') {
+        try {
+          if (parseInt(percentageDTO[i].fromAmount) >= parseInt(percentageDTO[i].toAmount)) {
+            toAmtError[i] = '"To Amount" value should be grater than "From Amount"';
+          } else if ((parseInt(percentageDTO[i].fromAmount) < parseInt(percentageDTO[i].toAmount)) && (toAmtError[i].includes('"To Amount" value should be grater than "From Amount"'))) {
+            toAmtError[i] = ' ';
+          }
+        } catch (err) { }
+        try {
+          if (fromAmtError[i].includes('Please Enter "From Amount"')) {
+            fromAmtError[i] = ' ';
+          }
+        } catch (err) { }
+        try {
+          if (toAmtError[i].includes('Please Enter "To Amount"')) {
+            toAmtError[i] = ' ';
+          }
+        } catch (err) { }
+        try {
+          if (fromAmtError[i].includes('Invalid "From Amount"')) {
+            let percentageDTO = [...this.state.percentageDTO]
+            let frAmtVal = percentageDTO[i].fromAmount;
+            for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
+              try {
+                if (j != i) {
+                  if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
+                    if (parseInt(frAmtVal) >= parseInt(percentageDTO[j].fromAmount) && parseInt(frAmtVal) <= parseInt(percentageDTO[j].toAmount)) {
+                      fromAmtError[i] = 'Invalid "From Amount"';
+                      break;
+                    } else if (fromAmtError[i].includes('Invalid "From Amount"')) {
+                      fromAmtError[i] = ' ';
+                    }
+                  }
+                }
+              } catch (err) { }
+            }
+          }
+          //  TODO : check to amount conditions
+          if (toAmtError[i].includes('Invalid "To Amount"')) {
+            let percentageDTO = [...this.state.percentageDTO]
+            let toAmtVal = percentageDTO[i].toAmount;
+            for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
+              try {
+                if (j != i) {
+                  if (percentageDTO[j].toAmount != '' && percentageDTO[j].fromAmount != '') {
+                    if (parseInt(toAmtVal) >= parseInt(percentageDTO[j].fromAmount) && parseInt(toAmtVal) <= parseInt(percentageDTO[j].toAmount)) {
+                      toAmtError[i] = 'Invalid "To Amount"';
+                      break;
+                    } else if (toAmtError[i].includes('Invalid "To Amount"')) {
+                      toAmtError[i] = ' ';
+                    }
+                  }
+                }
+              } catch (err) { }
+            }
+          }
+        } catch (err) { }
+        if (parseInt(value) == parseInt(percentageDTO[i].fromAmount)) {
+          for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
+            try {
+              if (j != i) {
+                if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
+                  if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
+                    fromAmtError[i] = 'Invalid "From Amount"';
+                    break;
+                  } else if (fromAmtError[i].includes('Invalid "From Amount"')) {
+                    fromAmtError[i] = ' ';
+                  }
+                }
+              }
+            } catch (err) { }
+          }
+        } else if (parseInt(value) == parseInt(percentageDTO[i].toAmount)) {
+          for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
+            try {
+              if (j != i) {
+                if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
+                  if (parseInt(value) >= parseInt(percentageDTO[j].fromAmount) && parseInt(value) <= parseInt(percentageDTO[j].toAmount)) {
+                    toAmtError[i] = 'Invalid "To Amount"';
+                    break;
+                  } else if (toAmtError[i].includes('Invalid "To Amount"')) {
+                    toAmtError[i] = ' ';
+                  }
+                }
+              }
+            } catch (err) { }
+          }
+        } else {
+          let percentageDTO = [...this.state.percentageDTO]
+          let toAmtVal = percentageDTO[i].toAmount;
+          let fromAmtVal = percentageDTO[i].fromAmount;
+          for (let j = 0; j <= this.state.percentageDTO.length - 1; j++) {
+            try {
+              if (j != i) {
+                if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
+                  if (parseInt(fromAmtVal) >= parseInt(percentageDTO[j].fromAmount) && parseInt(fromAmtVal) <= parseInt(percentageDTO[j].toAmount)) {
+                    fromAmtError[i] = 'Invalid "From Amount"';
+                    break;
+                  } else if (fromAmtError[i].includes('Invalid "From Amount"')) {
+                    fromAmtError[i] = ' ';
+                  }
+                }
+                if (percentageDTO[j].fromAmount != '' && percentageDTO[j].toAmount != '') {
+                  if (parseInt(toAmtVal) >= parseInt(percentageDTO[j].fromAmount) && parseInt(toAmtVal) <= parseInt(percentageDTO[j].toAmount)) {
+                    toAmtError[i] = 'Invalid "To Amount"';
+                    break;
+                  } else if (toAmtError[i].includes('Invalid "To Amount"')) {
+                    toAmtError[i] = ' ';
+                  }
+                }
+              }
+            } catch (err) { }
           }
         }
+
       }
-      console.log("FROM AMOUNT : ", fromAmtError);
-      console.log("TO AMOUNT : ", toAmtError);
       if (fromAmtError[i] == '') {
-        // delete fromAmtError[i];
-        // TODO enable below line
         fromAmtError[i] = ' ';
       }
       if (toAmtError[i] == '') {
-        // delete toAmtError[i];
-        // Todo enable below line
         toAmtError[i] = ' ';
       }
     }
-    this.setState({ fromAmtError, toAmtError });
+    this.setState({ fromAmtError, toAmtError }, this.validateField);
   }
+
+  // Function for validating multiple ip that seperated by comma
+  // toggleIpValidate = () => {
+  //   const commaLen = (this.state.ipAddressList.match(/,/g) || []).length;
+  //   for (let i = 0; i <= commaLen; i++) {
+  //     var res = this.state.ipAddressList.split(',')[i];
+  //     this.state.isIpAddressListvalid = validateip(res);
+  //     let errIpAddress = this.state.isIpAddressListvalid ? '' : 'Please enter valid IP address.';
+  //     this.setState(prevState => (prevState.errIpAddress !== errIpAddress ? { errIpAddress } : null));
+  //     if (this.state.isIpAddressListvalid == false) { break; }
+  //   }
+  //   if (this.state.isIpAddressListvalid) {
+  //     this.setCommision();
+  //   }
+  // }
+
   commissionSelect = (e) => {
-    console.log('commi select', e.target.value)
     const value = e.target.value;
     const name = e.target.name;
     this.setState({
@@ -528,8 +562,8 @@ export default class Commission extends Component {
       remitCommission: _filter(this.state.remitCompList, { companyName: value })[0]
     }, () => { this.setCommissionDetails() });
   }
+
   setCommissionDetails = () => {
-    console.log('setcom fun', this.state.remitCommission)
     if (this.state.remitCommission) {
       this.setState({
         firstName: this.state.remitCommission.firstName,
@@ -538,6 +572,7 @@ export default class Commission extends Component {
         city: this.state.remitCommission.city,
         address: this.state.remitCommission.address,
         accessToken: this.state.remitCommission.accessToken,
+        ipAddressList: this.state.remitCommission.ipAddress,
         accessKey: this.state.remitCommission.accessKey
       });
     } else {
@@ -554,6 +589,7 @@ export default class Commission extends Component {
   }
 
   setCommision = () => {
+    // API request for setting the commission
     const investorUrl = base_url + 'admin/set/remittance/details';
     this.setState({ isLoading: true });
     const payLoad = {
@@ -572,19 +608,80 @@ export default class Commission extends Component {
       'percentageDTO': this.state.percentageDTO,
       'vTNCommissionDTO': this.state.vTNCommissionDTO
     }
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
     axios.post(investorUrl, payLoad, {
       'headers': {
-        'authToken': sessionInfo.loginInfo.token,
-        'ownerType': sessionInfo.loginInfo.role
+        'authToken': this.state.token,
+        'ownerType': this.state.role
       }
     }).then(response => {
-      console.log('payload', payLoad)
       this.setState({ isLoading: false });
       if (response.status === 200) {
-        this.setState(initialState);
+        this.setState({
+          investorsList: [],
+          page: 1,
+          commissionPage: 1,
+          isLoading: false,
+          isChecked: false,
+          companyName: '',
+          remitCommission: [],
+          firstName: '',
+          emailId: '',
+          provider: '',
+          phone: '',
+          city: '',
+          address: '',
+          accessToken: '',
+          accessKey: '',
+          ipAddressList: '',
+          transLimit: '',
+          isProviderValid: false,
+          isIpAddressListvalid: false,
+          isTransLimitValid: false,
+          formValid: false,
+          errors: {},
+          percentageDTO: [
+            {
+              percentageId: 0,
+              fromAmount: '',
+              toAmount: '',
+              fixedAmountOfCommission: '',
+              percentageOfCommission: ''
+            }
+          ],
+          vTNCommissionDTO: [
+            {
+              investorPercentageId: 0,
+              emailId: '',
+              percentageOfInvestor: ''
+            }
+          ],
+          percentageDTOId: 0,
+          vTNCommissionDTOId: 0,
+          prcentageDtoRmv: [],
+          vTNCommissionDtoRmv: [],
+          deletedPercentageDto: [],
+          perOfInvestorError: [],
+          perOfCommissionError: [],
+          commissionEmailIdError: [],
+          fixAmtError: [''], // to avoid 1st mounting undefined error
+          toAmtError: [''], // to avoid 1st mounting undefined error
+          fromAmtError: [''], // to avoid 1st mounting undefined error
+          isPerOfInvestorValid: false,
+          isPerOfCommissionValid: false,
+          isFixAmtValid: false,
+          isToAmtValid: false,
+          isFromAmtValid: false,
+          isEmailIdValid: false,
+          isToAmtArrValid: false,
+          isFrmArrValid: false,
+          role: '',
+          token: '',
+          errIpAddress: ''
+        });
+        const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+        this.setState({ role: sessionInfo.loginInfo.role, token: sessionInfo.loginInfo.token });
         notify.show(response.data.message, 'success');
-      } else if (response.status === 206 && response.data.message === 'Session expired') {
+      } else if (response.status === 206 && response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
@@ -592,23 +689,25 @@ export default class Commission extends Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
+      this.setState({ isLoading: false });
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else if (error.response.status == 409) {
+        notify.show('Please fill all fields', 'error');
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
 
   render() {
-    const { isLoading, isChecked, remitCompList, companyName, errors, firstName, address, formValid,
-      remitCommission, perOfInvestorError, emailId, provider, phone, city, accessKey, accessToken, ipAddressList,
-      transLimit, investorsList, commissionEmailIdError, fixAmtError, perOfCommissionError, toAmtError, fromAmtError } = this.state;
-    console.log('commission state', this.state)
-    console.log('commission props', this.props.location.state)
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    const role = sessionInfo.loginInfo.role;
+    const { isLoading, isChecked, remitCompList, companyName, errors, firstName, address, role, errIpAddress, page,
+      perOfInvestorError, emailId, provider, phone, city, accessKey, accessToken, ipAddressList, formValid, commissionPage,
+      transLimit, commissionEmailIdError, fixAmtError, perOfCommissionError, toAmtError, fromAmtError } = this.state;
     return (
       <Fragment>
         {
@@ -629,10 +728,6 @@ export default class Commission extends Component {
               <div className="dashboard-title">
                 <h1>Commission</h1>
               </div>
-              {/* TODO : Discuss this button need */}
-              {/* <button type="button" className="createnew-admin lightblue">
-                            Add / Update Funds
-              </button> */}
               <div className="commission-form">
                 <div className="row">
                   <div className="col-lg-12 col-sm-12 col-xs-12 mobilepadd">
@@ -644,7 +739,7 @@ export default class Commission extends Component {
                             <div className="col-lg-6 col-sm-6 col-xs-12 mobilepadd">
                               <div className="form-group">
                                 <label>Company Name
-                                  <sup>*</sup>
+                                  <sup>*</sup> <span className="smallsize">Please click on the company name text field to add commission</span>
                                 </label>
                                 <input type="text" placeholder="Company Name" list="remitlist" name='companyName' value={companyName} onChange={this.commissionSelect} />
                                 <datalist id="remitlist">
@@ -728,7 +823,6 @@ export default class Commission extends Component {
                                 <div className="currency pos-relative">
                                   <select>
                                     <option value="active">Active</option>
-                                    {/* <option value="inactive">InActive</option> */}
                                   </select>
                                 </div>
                               </div>
@@ -738,8 +832,9 @@ export default class Commission extends Component {
                                 <label>IP Address White List
                                   <sup>*</sup>
                                 </label>
-                                <input type="text" placeholder="Company Name" name='ipAddressList' value={ipAddressList} onChange={this.handleChange} />
-                                <span className="error">{errors.ipAddressList}</span>
+                                <input type="text" placeholder="Company Name" name='ipAddressList' value={ipAddressList} />
+                                {/* <p> Note: <span> Enter multiple ip seperated by comma.</span></p> */}
+                                {/* <span className="error">{errIpAddress}</span> */}
                               </div>
                             </div>
                             <div className="col-lg-6 col-sm-6 col-xs-12 mobilepadd">
@@ -747,7 +842,7 @@ export default class Commission extends Component {
                                 <label>Daily Transaction Limit
                                   <sup>*</sup>
                                 </label>
-                                <input type="text" placeholder="Daily Transaction Limit" name='transLimit' value={transLimit} onChange={this.handleChange} />
+                                <input type="text" placeholder="Daily Transaction Limit" name='transLimit' value={transLimit} onChange={this.numChange} />
                                 <span className="error">{errors.transLimit}</span>
                               </div>
                             </div>
@@ -764,30 +859,32 @@ export default class Commission extends Component {
                           {isChecked && <FeeDeatilsTable onProductTableUpdate={this.handleProductTable.bind(this)}
                             onRowAdd={this.handleAddEvent.bind(this)} perOfCommissionError={perOfCommissionError} fixAmtError={fixAmtError}
                             onRowDel={this.handleRowDel.bind(this)} percentageDTO={this.state.percentageDTO}
-                            toAmtError={toAmtError} fromAmtError={fromAmtError} />}
+                            toAmtError={toAmtError} fromAmtError={fromAmtError} handlePageChange={this.handlePageChange}
+                            page={page} perPage={3} />}
                           <div className="clearfix"></div>
                         </div>
 
-                        <h1 className="commissionIcon">Commission Percentage</h1>
-                        <div className="persional-info-form">
-                          <div className="row">
-                            <div className="col-lg-6 col-sm-6 col-xs-12">
-                              <div className="form-group">
-                                <label>VTN Percent (%)
-                                </label>
-                                <input type="text" defaultValue="100%" readOnly />
+                        {isChecked && <Fragment> <h1 className="commissionIcon">Commission Percentage</h1>
+                          <div className="persional-info-form">
+                            <div className="row">
+                              <div className="col-lg-6 col-sm-6 col-xs-12">
+                                <div className="form-group">
+                                  <label>VTN Percent (%)
+                                  </label>
+                                  <input type="text" defaultValue="100%" readOnly />
+                                </div>
                               </div>
                             </div>
+                            <div className="clearfix"></div>
                           </div>
-                          <div className="clearfix"></div>
-                        </div>
-                        <h1 className="commissionIcon">VTN Commission Split Up</h1>
-                        <div className="persional-info-form">
-                          <CommissionTableHead perOfInvestorError={perOfInvestorError} commissionEmailIdError={commissionEmailIdError}
-                            onProductTableUpdate={this.clickCommiSplitValuesChange.bind(this)} onRowAdd={this.clickCommiSplitAddRow.bind(this)}
-                            onRowDel={this.clickCommiSplitRowDel.bind(this)} vTNCommissionDTO={this.state.vTNCommissionDTO} />
-                          <div className="clearfix"></div>
-                        </div>
+                          <h1 className="commissionIcon">VTN Commission Split Up</h1>
+                          <div className="persional-info-form">
+                            <CommissionTableHead perOfInvestorError={perOfInvestorError} commissionEmailIdError={commissionEmailIdError}
+                              onProductTableUpdate={this.clickCommiSplitValuesChange.bind(this)} onRowAdd={this.clickCommiSplitAddRow.bind(this)}
+                              onRowDel={this.clickCommiSplitRowDel.bind(this)} vTNCommissionDTO={this.state.vTNCommissionDTO}
+                              handleCommissionPageChange={this.handleCommissionPageChange} page={commissionPage} perPage={3} />
+                            <div className="clearfix"></div>
+                          </div></Fragment>}
                         <div className="commissionbtn">
                           <button type="button" disabled={!(formValid && companyName != '')} onClick={this.setCommision} className="commission-submit">Submit</button>
                         </div>

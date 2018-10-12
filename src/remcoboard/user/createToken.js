@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import axios from 'axios';
 import { SyncLoader } from 'react-spinners';
 import Notifications, { notify } from 'react-notify-toast';
@@ -10,16 +10,13 @@ import HeaderCommon from '../common/header';
 import Currency from '../common/custCurrency';
 import { base_url } from '../common/apiUrl';
 import CustSearch from '../common/custSearch';
-import CustTable from '../common/custTable';
 
 export default class CreateToken extends Component {
   constructor(props) {
     super(props);
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
-    console.log(sessionInfo.loginInfo)
     this.state = {
-      token: sessionInfo.loginInfo.token,
-      role: sessionInfo.loginInfo.role,
+      token: '',
+      role: '',
       currencyValue: '',
       tokenValue: '',
       isTokenValueValid: false,
@@ -29,8 +26,18 @@ export default class CreateToken extends Component {
       noOfToken: '',
       tokenList: '',
       page: 1,
-      // searchString: '',
       errors: {}
+    }
+    // Check authorized or not
+    if (sessionStorage.getItem('loginInfo') == null) {
+      props.history.push('/login');
+    }
+  }
+
+  UNSAFE_componentWillMount() {
+    if (sessionStorage.getItem('loginInfo') != null) {
+      const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+      this.setState({ role: sessionInfo.loginInfo.role, token: sessionInfo.loginInfo.token });
     }
   }
 
@@ -39,16 +46,23 @@ export default class CreateToken extends Component {
       this.setState({ currencyValue, currencyValueError: 'Please select currency type' });
     } else this.setState({ currencyValue, currencyValueError: '' });
   }
+
+  numChange = (e) => {
+    const value = e.target.value;
+    const name = e.target.name;
+    const re = /^[0-9\b]+$/;
+    if (value === '' || re.test(value)) {
+      this.setState({ [name]: value }, () => { this.validateField(name, value) });
+    }
+  }
+
   handleChange = (e) => {
-    console.log('val', e.target.value)
-    console.log('name', e.target.name)
     const value = e.target.value;
     const name = e.target.name;
     this.setState({ [name]: value }, () => { this.validateField(name, value) });
   }
 
   validateField(fieldName, value) {
-    console.log(value, 'value')
     let fieldValidationErrors = this.state.errors;
     switch (fieldName) {
       case 'tokenValue':
@@ -73,7 +87,6 @@ export default class CreateToken extends Component {
   }
 
   handlePageChange = (page) => {
-    console.log('pageno', page)
     this.setState({ page })
   }
 
@@ -85,7 +98,6 @@ export default class CreateToken extends Component {
       'tokenValue': this.state.tokenValue
     }
     this.setState({ isLoading: true });
-    console.log('payload', payLoad)
     axios.post(api_url, payLoad, {
       'headers': {
         'authToken': this.state.token,
@@ -96,7 +108,7 @@ export default class CreateToken extends Component {
       if (response.status === 200) {
         notify.show(response.data.message, 'success');
         this.setState({ tokenValue: '', noOfToken: '', currencyValue: '', tokenList: response.data.tokenDTO });
-      } else if (response.status === 206 && response.data.message === 'Session expired') {
+      } else if (response.status === 206 && response.data.message === 'Page Session has expired. Please login again') {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login')
         notify.show(response.data.message, 'error');
@@ -104,11 +116,14 @@ export default class CreateToken extends Component {
         notify.show(response.data.message, 'error');
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
@@ -116,8 +131,7 @@ export default class CreateToken extends Component {
   tableHead = ['Controll No', 'Token Number', 'Serial Number', 'Token Address', 'Currency Type', 'Token Value'];
 
   render() {
-    console.log('createtoken state', this.state);
-    const { tokenValue, noOfToken, role, formValid, errors, currencyValue, currencyValueError, tokenList, searchString, page } = this.state;
+    const { tokenValue, noOfToken, role, formValid, errors, currencyValue, currencyValueError, tokenList, page } = this.state;
     return (
       <div>
         {
@@ -144,7 +158,7 @@ export default class CreateToken extends Component {
                         <div className="persional-info-form">
                           <div className="tokencreationrow">
                             <div className="row">
-                              <div className="remco-lg-3 mobilepadd">
+                              <div className="col-lg-4 col-xs-12 mobilepadd">
                                 <div className="form-group">
                                   <label>Currency Type
                                     <sup>*</sup>
@@ -155,21 +169,21 @@ export default class CreateToken extends Component {
                                   </div>
                                 </div>
                               </div>
-                              <div className="remco-lg-3 mobilepadd">
+                              <div className="col-lg-4 col-xs-12 mobilepadd">
                                 <div className="form-group">
                                   <label>Token Value
                                     <sup>*</sup>
                                   </label>
-                                  <input type="text" placeholder="100" name='tokenValue' onChange={this.handleChange} value={tokenValue} />
+                                  <input type="text" placeholder="100" name='tokenValue' onChange={this.numChange} value={tokenValue} />
                                   <span className="error">{errors.tokenValue}</span>
                                 </div>
                               </div>
-                              <div className="remco-lg-3 mobilepadd">
+                              <div className="col-lg-4 col-xs-12 mobilepadd">
                                 <div className="form-group">
                                   <label>Number Of Tokens
                                     <sup>*</sup>
                                   </label>
-                                  <input type="text" placeholder="100" name='noOfToken' onChange={this.handleChange} value={noOfToken} />
+                                  <input type="text" placeholder="100" name='noOfToken' onChange={this.numChange} value={noOfToken} />
                                   <span className="error">{errors.noOfToken}</span>
                                 </div>
                               </div>
@@ -184,7 +198,7 @@ export default class CreateToken extends Component {
                         <h1 className="exporttable">Exportable Table</h1>
                         <div className="persional-info-form">
                           <div className="export-search">
-                            {!(tokenList === '') && <div className="export-button">
+                            {!(tokenList === '') && <Fragment> <div className="export-button">
                               <ReactHTMLTableToExcel
                                 id="excelExportBtn"
                                 className="excel-btn"
@@ -192,9 +206,10 @@ export default class CreateToken extends Component {
                                 filename="Token Details"
                                 sheet="Token Details"
                                 buttonText="Export As Excel" />
-                            </div>}
+                            </div>
                             <CustSearch tokenList={tokenList} tableHead={this.tableHead}
-                              page={page} perPage={2} isCreateToken handlePageChange={this.handlePageChange} />
+                              page={page} perPage={10} isCreateToken handlePageChange={this.handlePageChange} />
+                            </Fragment>}
                             <div className="clearfix"></div>
                           </div>
                         </div>

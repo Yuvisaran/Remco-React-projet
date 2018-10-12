@@ -7,10 +7,7 @@ import validator from 'validator';
 class HeaderCommon extends React.Component {
   constructor(props) {
     super(props);
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
     this.state = {
-      token: sessionInfo.loginInfo.token,
-      role: sessionInfo.loginInfo.role,
       isResetPwd: false,
       oldPassword: '',
       newPassword: '',
@@ -24,17 +21,27 @@ class HeaderCommon extends React.Component {
       newPasswordvalid: false,
       confirmPasswordvalid: false,
       formValid: false,
-      loading: false
+      loading: false,
+      role: '',
+      token: '',
+      ownerName: ''
     }
     this.logout = this.logout.bind(this);
     this.clickResetPassword = this.clickResetPassword.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.validateForm = this.validateForm.bind(this);
   }
+  UNSAFE_componentWillMount() {
+    if (sessionStorage.getItem('loginInfo') != null) {
+      const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
+      this.setState({
+        role: sessionInfo.loginInfo.role,
+        token: sessionInfo.loginInfo.token,
+        ownerName: sessionInfo.loginInfo.ownerName
+      });
+    }
+  }
   logout(props) {
-    console.log('props values', this.props);
-    console.log('props values', props);
-    const sessionInfo = JSON.parse(sessionStorage.getItem('loginInfo'));
     const api_url = base_url + 'user/logout';
     axios.get(api_url, {
       'headers': {
@@ -52,11 +59,14 @@ class HeaderCommon extends React.Component {
         notify.show(response.data.message, 'error')
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.propsPush.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.propsPush.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
@@ -83,11 +93,14 @@ class HeaderCommon extends React.Component {
         notify.show(response.data.message, 'error')
       }
     }).catch(error => {
-      console.log('error props', this.props);
       if (error.response.status == 401) {
         sessionStorage.removeItem('loginInfo');
         this.props.propsPush.history.push('/login');
-        notify.show(error.response.data.message, "error")
+        notify.show(error.response.data.message, 'error')
+      } else {
+        sessionStorage.removeItem('loginInfo');
+        this.props.propsPush.history.push('/login');
+        notify.show(error.response.data.message, 'error')
       }
     });
   }
@@ -106,7 +119,7 @@ class HeaderCommon extends React.Component {
         fieldValidationErrors.password = this.state.passwordvalid ? '' : 'Password must contain minimum 8 character.';
         break;
       case 'newPassword':
-        this.state.newPasswordvalid = value.length >= 8 && value.match(/^(?=.*?[A-Z])(?=(.*[a-z]){1,})(?=(.*[\d]){1,})(?=(.*[\W]){1,})(?!.*\s).{8,}$/);
+        this.state.newPasswordvalid = value.length >= 8 && value.match(/(?=.*[_!@#$%^&*-])(?=.*\d)(?!.*[.\n])(?=.*[a-z])(?=.*[A-Z])^.{8,}$/);
         fieldValidationErrors.newPassword = this.state.newPasswordvalid ? '' : 'Password must contain atleast one uppercase, one lowercase, one number, one special character and must contain minimum 8 character.';
         break;
       case 'confirmPassword':
@@ -144,6 +157,7 @@ class HeaderCommon extends React.Component {
   }
 
   render() {
+    const { ownerName, role } = this.state;
     return (
       <div>
         <Notifications />
@@ -153,7 +167,7 @@ class HeaderCommon extends React.Component {
               <i className="fa fa-bars"></i>
             </button>
             <div className="logo">
-              <a href="javascript:void(0);">
+              <a>
                 <div className="dashboardlogo"></div>
               </a>
             </div>
@@ -167,10 +181,10 @@ class HeaderCommon extends React.Component {
                   <a href="#" className="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                     <div className="profile_img">
                       <span className="prfil-img">
-                        <img src="src/public/image/profile.png" alt="profile" /> </span>
+                      </span>
                       <div className="user-name">
-                        <p>Pat M</p>
-                        <span>Administrator</span>
+                        <p>{ownerName}</p>
+                        <span>{role}</span>
                       </div>
                       <i className="fa fa-angle-down lnr"></i>
                       <i className="fa fa-angle-up lnr"></i>
@@ -196,7 +210,7 @@ class HeaderCommon extends React.Component {
         </div>
         {this.state.isResetPwd && <div className="loaderBg">
           <div className="loaderimg">
-            <div className="login-wrapper">
+            <div className="login-wrapper shadnone">
               <div className="login-bg">
                 <div className="login-logo">
                   <div className="logo-div"></div>
@@ -218,7 +232,13 @@ class HeaderCommon extends React.Component {
                     </div>
                     <div className="form-group">
                       <button type="submit" disabled={this.state.oldPassword === '' || this.state.newPassword === '' || this.state.confirmPassword === ''} className="loginbtn-submit green">Save</button>
-                      <button type="button" className="loginbtn-submit green" onClick={() => this.setState({ isResetPwd: false })} >Cancel</button>
+                      <button type="button" className="loginbtn-submit mtop10 green" onClick={() => this.setState({
+                        isResetPwd: false,
+                        oldPassword: '',
+                        newPassword: '',
+                        confirmPassword: '',
+                        errors: {}
+                      })} >Cancel</button>
                     </div>
                   </form>
                 </div>
